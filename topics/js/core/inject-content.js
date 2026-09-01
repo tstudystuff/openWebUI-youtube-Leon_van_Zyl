@@ -15,6 +15,8 @@ export const prevBtn = document.querySelector('#prevBtn')
 // Temporary fix, i'm quering step-floats again which i shouldn't
 export const lessonBtnsContainer = document.querySelector('.lesson-btns-container')
 export function injectContent(href) {
+    console.log(href);
+    
     fetch(href)
         .then(response => {
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
