@@ -172,7 +172,7 @@ function setupGlobalKeyListener() {
     });
 
 
-    setupLessonButtons(nxtBtn, prevBtn, updateAllSideBarLinks, lastClickedSideBarLink, mainContainer);
+    setupLessonButtons(nxtBtn, prevBtn,);
 }
 
 function setHighlight(el) {

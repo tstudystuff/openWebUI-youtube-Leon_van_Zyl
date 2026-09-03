@@ -59,10 +59,18 @@ export function navigateLesson(direction) {
     mainContainer.classList.remove("collapsed");
 
 
-    // Focus corresponding lesson
-    targetLink.click();
-
-
-    // Use existing sidebar behavior
+    /*
+     * IMPORTANT:
+     *
+     * Click the target lesson ONCE.
+     *
+     * The sidebar link's existing click behavior
+     * already handles loading / injecting the lesson.
+     *
+     * Clicking it twice can cause the newly initialized
+     * lesson DOM to immediately be replaced by a second
+     * injection, leaving the final media without its
+     * event listeners.
+     */
     targetLink.click();
 }
