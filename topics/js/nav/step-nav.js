@@ -46,10 +46,10 @@ export function initStepNavigation({ mainTargetDiv}){
     allVids = Array.from(mainTargetDiv.querySelectorAll(".step-vid > video"));
     allVids.forEach(vid => {
         vid.addEventListener('click', e => {
-            // e.preventDefault()
-            // e.stopPropagation()
+            e.stopPropagation();
+
             if (e.target.tagName === "VIDEO") {
-                videoControls({vid,e})
+                videoControls({ vid, e });
             }
         });
         vid.addEventListener('keydown', e => {
