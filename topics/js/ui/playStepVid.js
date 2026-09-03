@@ -8,6 +8,31 @@ const CONTROL_FLASH_TIME = 180;
 
 /* =========================================================
    VIDEO / CONTROL HELPERS
+
+   Videos may live inside either:
+
+       .step-vid
+       .img-container
+
+   This restores support for videos inside the older
+   img-container structure while preserving normal
+   step-vid behavior.
+   ========================================================= */
+
+function getVideoContainer(vid) {
+
+    return vid?.closest(
+        ".step-vid, .img-container"
+    );
+
+}
+
+
+/* =========================================================
+   GET STEP-VID ONLY
+
+   Used when we specifically need the modern .step-vid
+   wrapper for enlargement.
    ========================================================= */
 
 function getStepVid(vid) {
@@ -19,13 +44,19 @@ function getStepVid(vid) {
 }
 
 
+/* =========================================================
+   VIDEO CONTROLS
+   ========================================================= */
+
 function getControls(vid) {
 
-    const stepVid =
-        getStepVid(vid);
+    const container =
+        getVideoContainer(
+            vid
+        );
 
 
-    if (!stepVid) {
+    if (!container) {
 
         return {
             rewindBtn: null,
@@ -42,17 +73,17 @@ function getControls(vid) {
          * Existing HTML/button naming preserved.
          */
         rewindBtn:
-            stepVid.querySelector(
+            container.querySelector(
                 ".fwdBtn"
             ),
 
         playBtn:
-            stepVid.querySelector(
+            container.querySelector(
                 ".playbtn"
             ),
 
         forwardBtn:
-            stepVid.querySelector(
+            container.querySelector(
                 ".rwdBtn"
             )
 
@@ -71,9 +102,18 @@ function syncVideoSize(vid) {
 
 
     const stepVid =
-        getStepVid(vid);
+        getStepVid(
+            vid
+        );
 
 
+    /*
+     * Videos directly inside .img-container do not need
+     * this special wrapper sizing logic.
+     *
+     * Their size continues to be controlled by the
+     * img-container / normal stylesheet.
+     */
     if (!stepVid) return;
 
 
@@ -444,13 +484,23 @@ export function pauseAllVideos({
             );
 
 
-        stepVid?.classList.remove(
-            "enlarge"
-        );
+        /*
+         * Only .step-vid wrappers receive these
+         * enlargement classes.
+         *
+         * img-container videos are still paused normally.
+         */
+        if (stepVid) {
 
-        stepVid?.classList.remove(
-            "first-vid-enlarge"
-        );
+            stepVid.classList.remove(
+                "enlarge"
+            );
+
+            stepVid.classList.remove(
+                "first-vid-enlarge"
+            );
+
+        }
 
 
         /*
@@ -485,10 +535,14 @@ export function pauseAllVideos({
 /* =========================================================
    VIDEO CLICK
 
-   Clicking the actual VIDEO toggles the
-   .step-vid wrapper enlargement.
+   .step-vid:
+       clicking the video keeps the existing
+       enlarge + play behavior.
 
-   Control buttons do not come through here.
+   .img-container:
+       clicking the video behaves like a normal
+       video and toggles playback without
+       enlarging the entire img-container.
    ========================================================= */
 
 export function toggleVideoSizeClick({
@@ -504,43 +558,77 @@ export function toggleVideoSizeClick({
         );
 
 
-    if (!stepVid) return;
+    /* =====================================================
+       NORMAL .step-vid
+       ===================================================== */
+
+    if (stepVid) {
+
+        const willEnlarge =
+            !stepVid.classList.contains(
+                "enlarge"
+            );
 
 
-    const willEnlarge =
-        !stepVid.classList.contains(
+        stepVid.classList.toggle(
             "enlarge"
         );
 
 
-    stepVid.classList.toggle(
-        "enlarge"
-    );
+        stepVid.classList.remove(
+            "first-vid-enlarge"
+        );
 
 
-    stepVid.classList.remove(
-        "first-vid-enlarge"
-    );
-
-
-    /*
-     * Immediately synchronize the actual
-     * <video> with its wrapper.
-     */
-    syncVideoSize(
-        vid
-    );
-
-
-    if (willEnlarge) {
-
-        playVideo(
+        /*
+         * Immediately synchronize the actual
+         * <video> with its wrapper.
+         */
+        syncVideoSize(
             vid
         );
 
-    } else {
 
-        pauseVideo(
+        if (willEnlarge) {
+
+            playVideo(
+                vid
+            );
+
+        } else {
+
+            pauseVideo(
+                vid
+            );
+
+        }
+
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       VIDEO INSIDE .img-container
+       ===================================================== */
+
+    if (
+        vid.closest(
+            ".img-container"
+        )
+    ) {
+
+        /*
+         * Do NOT enlarge the whole img-container.
+         *
+         * The img-container itself is responsible for
+         * cycling/enlargement through the media system.
+         *
+         * Clicking the video simply behaves like a
+         * normal playable video again.
+         */
+        togglePlayPause(
             vid
         );
 
@@ -578,24 +666,51 @@ function videoKeyControl({
                 );
 
 
-            syncVideoSize(
-                vid
-            );
+            /*
+             * Modern .step-vid behavior.
+             */
+            if (stepVid) {
 
-
-            if (
-                stepVid?.classList.contains(
-                    "enlarge"
-                )
-            ) {
-
-                playVideo(
+                syncVideoSize(
                     vid
                 );
 
-            } else {
 
-                pauseVideo(
+                if (
+                    stepVid.classList.contains(
+                        "enlarge"
+                    )
+                ) {
+
+                    playVideo(
+                        vid
+                    );
+
+                } else {
+
+                    pauseVideo(
+                        vid
+                    );
+
+                }
+
+
+                break;
+
+            }
+
+
+            /*
+             * A video inside an img-container can
+             * still be played normally.
+             */
+            if (
+                vid.closest(
+                    ".img-container"
+                )
+            ) {
+
+                togglePlayPause(
                     vid
                 );
 
@@ -819,7 +934,7 @@ export function videoControls({
 
         /*
          * Only clicking the actual <video>
-         * toggles enlargement here.
+         * reaches the video play/enlarge handler.
          */
         if (
             e.target === vid

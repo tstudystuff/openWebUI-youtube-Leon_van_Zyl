@@ -1,4 +1,5 @@
 // js/nav/step-nav.js
+
 import {
     cycleStepMedia,
     denlargeAllImages,
@@ -34,16 +35,34 @@ let stepFocused = false;
 let stepClicked = false;
 
 
+/*
+ * IMPORTANT:
+ *
+ * Normal child focus should still shrink enlarged media,
+ * exactly like before.
+ *
+ * The ONE exception is when Enter itself enlarges media
+ * and then programmatically focuses the first copy-code/link.
+ *
+ * In that case we preserve the media we JUST enlarged.
+ */
+let preserveMediaOnChildFocus = false;
+
+
 /* =========================================================
    STATE HELPERS
    ========================================================= */
 
 export function removeLastStep() {
+
     lastStep = null;
+
 }
 
 
-function updateCurrentCopyCodes({ step }) {
+function updateCurrentCopyCodes({
+    step
+}) {
 
     copyCodes = [
         ...step.querySelectorAll(
@@ -83,6 +102,15 @@ export function initStepNavigation({
     ];
 
 
+    /*
+     * This ALREADY finds media inside .imgs-container.
+     *
+     * Example:
+     *
+     * .imgs-container
+     *     .step-img
+     *     .step-vid
+     */
     allStepImgVids = [
         ...mainTargetDiv.querySelectorAll(
             ".step-img, .step-vid"
@@ -95,6 +123,11 @@ export function initStepNavigation({
     );
 
 
+    /*
+     * Your Step 02 video matches this exactly:
+     *
+     * .step-vid > video
+     */
     allVids = [
         ...mainTargetDiv.querySelectorAll(
             ".step-vid > video"
@@ -115,7 +148,9 @@ export function initStepNavigation({
                     ".step-img, .step-vid"
                 );
 
+
             if (media) return;
+
 
             denlargeAllImages();
 
@@ -134,6 +169,7 @@ export function initStepNavigation({
                 ".step-vid"
             );
 
+
         if (!stepVid) return;
 
 
@@ -147,6 +183,7 @@ export function initStepNavigation({
 
                 e.preventDefault();
                 e.stopPropagation();
+
 
                 videoControls({
                     vid,
@@ -166,6 +203,7 @@ export function initStepNavigation({
             e => {
 
                 e.stopPropagation();
+
 
                 videoControls({
                     vid,
@@ -194,6 +232,7 @@ export function initStepNavigation({
 
                     e.preventDefault();
                     e.stopPropagation();
+
 
                     videoControls({
                         vid,
@@ -226,12 +265,15 @@ export function initStepNavigation({
                         ".vid-cntrl-btns"
                     )
                 ) {
+
                     return;
+
                 }
 
 
                 e.preventDefault();
                 e.stopPropagation();
+
 
                 clickToggleEnlarge({
                     e
@@ -249,13 +291,25 @@ export function initStepNavigation({
 
     steps.forEach(
         (step, index) => {
-            if (step.hasAttribute('data-auto-focus')) {
+
+
+            if (
+                step.hasAttribute(
+                    "data-auto-focus"
+                )
+            ) {
+
                 step.focus();
+
             }
+
+
             if (
                 step.dataset.listenerAdded
             ) {
+
                 return;
+
             }
 
 
@@ -274,16 +328,47 @@ export function initStepNavigation({
                 e => {
 
                     /*
-                     * Focusing the step container means
-                     * we are navigating STEPS, not inside
-                     * the step yet.
+                     * Focusing the actual step means we're
+                     * navigating steps again.
                      */
-                    stepClicked = false;
+                    stepClicked =
+                        false;
 
-                    iSteps = index;
-                    iCopyCodes = 0;
+
+                    iSteps =
+                        index;
+
+
+                    iCopyCodes =
+                        0;
+
 
                     denlargeAllImages();
+
+
+                    /*
+                     * IMPORTANT FIX:
+                     *
+                     * Every fresh arrival on a step starts
+                     * its media cycle BEFORE item #1.
+                     *
+                     * cycleStepMedia() increments this:
+                     *
+                     * -1 -> 0
+                     *
+                     * Therefore first Enter = first media.
+                     */
+                    step.dataset.mediaIndex =
+                        -1;
+
+
+                    /*
+                     * Fresh step navigation should use
+                     * normal focus behavior.
+                     */
+                    preserveMediaOnChildFocus =
+                        false;
+
 
                     lastStep =
                         step;
@@ -339,9 +424,7 @@ export function initStepNavigation({
 
 
                     /*
-                     * A child of the step received focus.
-                     *
-                     * This means we've ENTERED the step.
+                     * Child inside step received focus.
                      */
                     if (
                         e.target !== step
@@ -351,9 +434,10 @@ export function initStepNavigation({
                             true;
 
 
-                        /*
-                         * Keep copy-code state synchronized.
-                         */
+                        /* ---------------------------------
+                           COPY-CODE STATE
+                           --------------------------------- */
+
                         if (
                             e.target.classList
                                 ?.contains(
@@ -388,10 +472,37 @@ export function initStepNavigation({
                         }
 
 
-                        /*
-                         * Any child focus removes
-                         * enlarged image/video state.
-                         */
+                        /* ---------------------------------
+                           ENTER-INITIATED CHILD FOCUS
+
+                           Enter just enlarged media and
+                           then moved focus to copy-code/link.
+
+                           DON'T immediately undo the
+                           enlargement we just requested.
+                           --------------------------------- */
+
+                        if (
+                            preserveMediaOnChildFocus
+                        ) {
+
+                            preserveMediaOnChildFocus =
+                                false;
+
+
+                            return;
+
+                        }
+
+
+                        /* ---------------------------------
+                           NORMAL CHILD FOCUS
+
+                           Existing behavior preserved:
+                           moving around inside a step
+                           shrinks enlarged media.
+                           --------------------------------- */
+
                         step.querySelectorAll(
                             ".step-img.enlarge, .step-vid.enlarge"
                         ).forEach(media => {
@@ -399,6 +510,7 @@ export function initStepNavigation({
                             media.classList.remove(
                                 "enlarge"
                             );
+
 
                             media.classList.remove(
                                 "first-vid-enlarge"
@@ -422,15 +534,21 @@ export function initStepNavigation({
 
                     /*
                      * Focus stayed somewhere inside
-                     * the same step.
+                     * this same step.
                      */
                     if (
                         step.contains(
                             e.relatedTarget
                         )
                     ) {
+
                         return;
+
                     }
+
+
+                    preserveMediaOnChildFocus =
+                        false;
 
 
                     denlargeAllImages();
@@ -458,6 +576,8 @@ export function initStepNavigation({
 
 
                     if (!stepFloat) return;
+
+
                     /* =====================================
                        LINK SHIFT + ENTER
                        TOGGLE STEP MEDIA SIZE
@@ -466,18 +586,24 @@ export function initStepNavigation({
                     if (
                         key === "Enter" &&
                         e.shiftKey &&
-                        e.target.closest("a[href]")
+                        e.target.closest(
+                            "a[href]"
+                        )
                     ) {
 
                         e.preventDefault();
                         e.stopPropagation();
 
+
                         toggleStepMedia(
                             stepFloat
                         );
 
+
                         return;
+
                     }
+
 
                     /* =====================================
                        ENTER / SHIFT + ENTER
@@ -489,14 +615,16 @@ export function initStepNavigation({
 
                         /*
                          * Never cycle media from
-                         * custom video buttons.
+                         * video-control buttons.
                          */
                         if (
                             e.target.closest(
                                 ".vid-cntrl-btns"
                             )
                         ) {
+
                             return;
+
                         }
 
 
@@ -523,16 +651,28 @@ export function initStepNavigation({
                                 true;
 
 
+                            /*
+                             * Cycle THIS STEP'S:
+                             *
+                             * .step-img
+                             * .step-vid
+                             *
+                             * Items inside .imgs-container
+                             * are automatically included.
+                             */
                             const enlargedMedia =
                                 cycleStepMedia(
                                     stepFloat
                                 );
 
 
-                            /*
-                             * If Enter enlarges a video,
-                             * start playing it.
-                             */
+                            /* ---------------------------------
+                               VIDEO
+
+                               If the media we just enlarged is
+                               .step-vid, start the video.
+                               --------------------------------- */
+
                             if (
                                 enlargedMedia
                                     ?.classList
@@ -560,13 +700,17 @@ export function initStepNavigation({
                             }
 
 
-                            /*
-                             * Entering a step begins on
-                             * the first copy-code.
-                             *
-                             * If there is no copy-code,
-                             * try the first link.
-                             */
+                            /* ---------------------------------
+                               ENTER STEP CONTENT
+
+                               Keep existing behavior:
+                               focus first copy-code, otherwise
+                               first link.
+
+                               BUT preserve the media that Enter
+                               just enlarged.
+                               --------------------------------- */
+
                             const firstCopyCode =
                                 stepFloat
                                     .querySelector(
@@ -582,15 +726,28 @@ export function initStepNavigation({
 
 
                             if (
+                                firstCopyCode &&
+                                document.activeElement !==
                                 firstCopyCode
                             ) {
+
+                                preserveMediaOnChildFocus =
+                                    true;
+
 
                                 firstCopyCode
                                     .focus();
 
                             } else if (
+                                !firstCopyCode &&
+                                firstLink &&
+                                document.activeElement !==
                                 firstLink
                             ) {
+
+                                preserveMediaOnChildFocus =
+                                    true;
+
 
                                 firstLink
                                     .focus();
@@ -606,11 +763,14 @@ export function initStepNavigation({
 
                         /* ---------------------------------
                            SHIFT + ENTER
-                           RESTART VIDEO
                            --------------------------------- */
 
                         else {
 
+                            /*
+                             * Existing Shift+Enter behavior
+                             * preserved.
+                             */
                             stepFloat.focus();
 
 
@@ -684,10 +844,8 @@ export function initStepNavigation({
 
                     if (
                         key === " " ||
-                        key ===
-                        "ArrowLeft" ||
-                        key ===
-                        "ArrowRight"
+                        key === "ArrowLeft" ||
+                        key === "ArrowRight"
                     ) {
 
                         videoControls({
@@ -770,10 +928,13 @@ export function initStepNavigation({
                     e.preventDefault();
                     e.stopPropagation();
 
+
                     stepClicked =
                         false;
 
+
                     step.focus();
+
 
                     return;
 
@@ -797,6 +958,7 @@ export function initStepNavigation({
                 e.preventDefault();
                 e.stopPropagation();
 
+
                 return;
 
             }
@@ -813,6 +975,7 @@ export function initStepNavigation({
             ) {
 
                 e.preventDefault();
+
 
                 numStepNav(
                     Number(key),
@@ -873,6 +1036,7 @@ function numStepNav(
             iCopyCodes =
                 intLet - 1;
 
+
             copyCode.focus();
 
         }
@@ -924,7 +1088,9 @@ export function handleStepNav({
         focusZone !==
         "mainTargetDiv"
     ) {
+
         return;
+
     }
 
 
@@ -944,10 +1110,12 @@ export function handleStepNav({
 
         e.preventDefault();
 
+
         numStepNav(
             Number(key),
             e.target
         );
+
 
         return;
 
@@ -995,7 +1163,9 @@ export function handleStepNav({
             if (
                 !focusableItems.length
             ) {
+
                 return;
+
             }
 
 
@@ -1036,10 +1206,6 @@ export function handleStepNav({
         if (!steps.length) return;
 
 
-        /*
-         * When beginning from mainTargetDiv,
-         * start at step 1.
-         */
         if (
             e.target ===
             mainTargetDiv
@@ -1111,7 +1277,9 @@ export function handleStepNav({
             if (
                 !focusableItems.length
             ) {
+
                 return;
+
             }
 
 
