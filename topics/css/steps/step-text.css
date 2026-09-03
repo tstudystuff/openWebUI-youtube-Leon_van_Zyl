@@ -1,13 +1,14 @@
-
 #targetDiv .main-container {
     display: flex;
     flex-direction: column !important;
 }
+
 /* steps.css */
 .steps-container {
     display: flex;
     flex-direction: column;
 }
+
 #navLessonTitle {
     display: flex;
     /* flex-grow: 1; */
@@ -20,37 +21,43 @@
     /* max-width: 50%; */
     flex-basis: 50%;
 }
-.step-content p {    
+
+.step-content p {
     padding: 1% 2%;
     line-height: 1.4;
 }
-.step-content > ul {    
-    padding: 2% 0 ;
+
+.step-content>ul {
+    padding: 2% 0;
     /* border: 1px solid red; */
     padding-left: 20%;
 }
-.step-float{
+
+.step-float {
     margin: 1%;
     padding: 2%;
 }
+
 .step-float ul,
-.step-float ol{
+.step-float ol {
     align-self: center;
     align-self: center;
     margin: 0 5%;
 }
 
-.imgs-container{
+.imgs-container {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
 }
-.imgs-container > *{
+
+.imgs-container>* {
     flex-basis: 40%;
     /* width: 50%; */
 }
-.imgs-container > *> video,
-.imgs-container > *> img{
+
+.imgs-container>*>video,
+.imgs-container>*>img {
     width: 100%;
 }
 
@@ -58,6 +65,7 @@
     width: 100%;
     display: flex;
 }
-.step-floats-container > .step-float{
+
+.step-floats-container>.step-float {
     flex-basis: 40%;
 }

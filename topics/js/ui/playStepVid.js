@@ -1,5 +1,23 @@
 // playStepVid.js
-let playing = false; 
+let playing = false;
+function updatePlayButton(vid) {
+    if (!vid) return;
+
+    const stepVid = vid.closest('.step-vid');
+    const playBtn = stepVid?.querySelector('.playbtn');
+
+    if (!playBtn) return;
+
+    if (vid.paused) {
+        playBtn.textContent = '▶';
+        playBtn.classList.remove('is-playing');
+        playBtn.setAttribute('aria-label', 'Play video');
+    } else {
+        playBtn.textContent = '❚❚';
+        playBtn.classList.add('is-playing');
+        playBtn.setAttribute('aria-label', 'Pause video');
+    }
+}
 export function pauseAllVideos({ allVids }) {
     if (!allVids || !allVids.forEach) return;
     allVids.forEach(vid => {
@@ -21,57 +39,73 @@ export function videoControls({ vid, e }) {
     }
 }
 function vidKeyCntrl({ vid, e, key }) {
-    console.log()
-    if (!vid) return
-    if (e.type == 'click') {
-        
-    } else {
+    if (!vid) return;
 
-        switch (key) {
-            case 13: // Enter
-                if (e.target.classList.contains('enlarge')) {
-                    playing = true;
-                }
-                break;
-            case 32: // Space
-                e.preventDefault();
-                if (vid.currentTime === vid.duration) {
-                    vid.currentTime = 0;
-                    playing = false;
-                } else {
-                    playing = !playing;
-                }
-                break;
-            case 37: // Left arrow
-                vid.currentTime -= 0.5;
+    const stepVid = vid.closest('.step-vid');
+
+    switch (key) {
+
+        case 13: // Enter
+            if (stepVid?.classList.contains('enlarge')) {
                 playing = true;
-                break;
-            case 39: // Right arrow
-                vid.currentTime += 0.5;
-                playing = true;
-                break;
-        }
+            } else {
+                playing = false;
+            }
+            break;
+
+        case 32: // Space
+            e.preventDefault();
+
+            if (vid.currentTime === vid.duration) {
+                vid.currentTime = 0;
+                playing = false;
+            } else {
+                playing = !playing;
+            }
+            break;
+
+        case 37: // Left arrow
+            vid.currentTime -= 0.5;
+            playing = true;
+            break;
+
+        case 39: // Right arrow
+            vid.currentTime += 0.5;
+            playing = true;
+            break;
     }
+
     playPauseVideo({ vid, playing });
 }
 export function toggleVideoSizeClick({ vid, e }) {
-    const stepVid = vid.parentElement
-    stepVid.classList.toggle('enlarge')
-    if (!vid) return
-    if(stepVid.classList.contains('enlarge') && !playing){
-        playing = true
+    if (!vid) return;
+
+    const stepVid = vid.closest('.step-vid');
+    if (!stepVid) return;
+
+    stepVid.classList.toggle('enlarge');
+
+    if (stepVid.classList.contains('enlarge')) {
+        playing = true;
     } else {
-        playing = false
+        playing = false;
     }
-    vidKeyCntrl({vid,e})
+
+    playPauseVideo({ vid, playing });
 }
 function playPauseVideo({ vid, playing }) {
-    if (!vid) return
-    if (vid) {
-        if (playing) {
-            vid.play();
-        } else {
-            vid.pause();
-        }
+    if (!vid) return;
+
+    if (playing) {
+        vid.play()
+            .then(() => {
+                updatePlayButton(vid);
+            })
+            .catch(() => {
+                updatePlayButton(vid);
+            });
+    } else {
+        vid.pause();
+        updatePlayButton(vid);
     }
 }
