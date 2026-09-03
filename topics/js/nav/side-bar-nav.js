@@ -1,5 +1,5 @@
 // side-bar-nav.js
-import { homepage } from "../core/main-script.js";
+import { homepage } from "../app.js";
 import { handleMKey } from "./m-key-handler.js";
 import { changeTutorialLink } from "../ui/change-tutorial-link.js";
 import { sideBar, sideBarBtn } from "../ui/toggle-side-bar.js";
@@ -67,14 +67,21 @@ function getParentTopLink(subLink) {
 ========================= */
 allSideBarLinks.forEach((el, i) => {
     // CLICK
-    el.addEventListener('click', e => {
+    el.addEventListener('click', async e => {
         e.preventDefault();
-        injectContent(el.href);
-        console.log('here',e.target)
+
+        const sameLink = el === lastClickedSideBarLink;
+
+        await injectContent(el.href);
+
         changeTutorialLink(e);
-        
+
         lastClickedSideBarLink = el;
-        
+        lastFocusedSideBarLink = el;
+
+        if (sameLink) {
+            focusFirstStep();
+        }
     });
 
     // ENTER
@@ -83,19 +90,21 @@ allSideBarLinks.forEach((el, i) => {
 
         if (key === 'enter') {
             e.preventDefault();
-            
-            injectContent(el.href);
-            changeTutorialLink(e);
-            if (e.target == lastClickedSideBarLink) {
-                console.log('ehre')
-                requestAnimationFrame(() => {
-                    const firstStep = mainTargetDiv.querySelector(".step-float");
-                    if (firstStep) firstStep.focus();
-                    console.log('here')
-                    return
-                });
-            }
-            lastClickedSideBarLink = el;
+
+            const sameLink = el === lastClickedSideBarLink;
+
+            injectContent(el.href).then(() => {
+                changeTutorialLink(e);
+
+                lastClickedSideBarLink = el;
+                lastFocusedSideBarLink = el;
+
+                if (sameLink) {
+                    focusFirstStep();
+                }
+            });
+
+            return;
         }
 
         if (key === 'm') {
@@ -225,3 +234,11 @@ sideBarBtn.addEventListener('focus', () => {
     // sideBar.scrollIntoView({ behavior: "smooth", block: "start",inline:'start' });
     scrollTo(0,0)
 });
+
+function focusFirstStep() {
+    const firstStep = mainTargetDiv.querySelector('.step-float');
+
+    if (firstStep) {
+        firstStep.focus();
+    }
+}

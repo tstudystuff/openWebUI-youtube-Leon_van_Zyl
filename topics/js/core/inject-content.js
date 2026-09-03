@@ -1,11 +1,10 @@
 // inject-content.js
 let iAllSideBarLinks = 0
-import { allSideBarLinks,lastClickedSideBarLink,updateLastClicked,getHrefFromLink } from "../nav/side-bar-nav.js";
 import { mainContainer } from "../ui/toggle-side-bar.js";
 import { mainTargetDiv } from "../nav/main-content-nav.js";
 import { initStepNavigation } from "../nav/step-nav.js";
 import { removeLastStep } from "../nav/step-nav.js";
-import { handleSKeySideBarNav } from "./main-script.js";
+import { handleSKeySideBarNav } from "../app.js";
 
 import { updateImgs } from "../ui/toggle-img-sizes.js";
 import { addCopyCode } from "../ui/copy-code.js";
@@ -17,9 +16,13 @@ export const lessonBtnsContainer = document.querySelector('.lesson-btns-containe
 export function injectContent(href) {
     console.log(href);
     
-    fetch(href)
+
+    return fetch(href)
         .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
             return response.text();
         })
         .then(html => {

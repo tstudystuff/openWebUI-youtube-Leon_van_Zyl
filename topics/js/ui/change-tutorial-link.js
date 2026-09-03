@@ -1,5 +1,5 @@
 // change-tutorial-link.js
-import { tutorialLink } from "../core/main-script.js";
+import { tutorialLink } from "../app.js";
 let default_time = 65
 export function initTutorialLink() {
     tutorialLink.addEventListener('click', e => {

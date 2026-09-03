@@ -6,7 +6,7 @@ import {
     enlargeSingleMedia, updateImgs
 } from "../ui/toggle-img-sizes.js"
 import { changeTutorialLink } from "../ui/change-tutorial-link.js"
-import { tutorialLink } from "../core/main-script.js"
+import { tutorialLink } from "../app.js"
 import { videoControls, pauseAllVideos, toggleVideoSizeClick} from "../ui/playStepVid.js" 
 import { mainTargetDiv } from "./main-content-nav.js"
 import { getFocusZone } from "./get-focus-zone.js"
