@@ -6,7 +6,7 @@ import { lastClickedSideBarLink } from "./side-bar-nav.js";
 import { mainContainer, sideBarBtn } from "../ui/toggle-side-bar.js";
 import { navBarLessonTitle } from "../ui/toggle-side-bar.js";
 export function letterFocus({ e, focusZone }) {
-    if (!e || !e.key) return;    
+    if (!e || !e.key) return;
     // Ignore typing fields and modifier keys
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
@@ -14,7 +14,7 @@ export function letterFocus({ e, focusZone }) {
     const key = e.key.toLowerCase();
     if (key.length !== 1 || !/^[a-z0-9]$/.test(key)) return;
     // Find visible, valid elements
-    const allEls = [...document.querySelectorAll('a, [id]')].filter(el => {
+    const allEls = [...document.querySelectorAll('a, [id], [data-nav-target]')].filter(el => {
         const rect = el.getBoundingClientRect();
         return el.offsetParent !== null && rect.width > 0 && rect.height > 0;
     });
@@ -43,25 +43,25 @@ export function letterFocus({ e, focusZone }) {
             id !== 'targetheaderh3'
         );
     });
-// SPECIAL CASES for mainTargetDiv and sideBar in side-bar-nav.js and main-content-nav.js
-    if (focusZone === 'mainTargetDiv'){
-        
-        if (key === 'm' ) {
-            handleMKey({e,focusZone});
+    // SPECIAL CASES for mainTargetDiv and sideBar in side-bar-nav.js and main-content-nav.js
+    if (focusZone === 'mainTargetDiv') {
+
+        if (key === 'm') {
+            handleMKey({ e, focusZone });
             // console.log('here')
             return;
             // console.log('letter-focus.js')
         }
     }
-    if(key === 's'){
-        if(focusZone === 'mainTargetDiv'){
-            if(mainContainer.classList.contains('collapsed')){
+    if (key === 's') {
+        if (focusZone === 'mainTargetDiv') {
+            if (mainContainer.classList.contains('collapsed')) {
                 sideBarBtn.focus()
             }
-            return 
+            return
         }
-        if(focusZone === 'sideBar'){
-            return 
+        if (focusZone === 'sideBar') {
+            return
         }
     }
     if (matching.length === 0) return;
