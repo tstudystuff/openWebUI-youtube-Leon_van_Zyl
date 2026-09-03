@@ -1,4 +1,4 @@
-// main-script.js
+ // main-script.js
 // ===== Imports =====
 import { injectContent } from "./inject-content.js";
 import { updateAllSideBarLinks } from "../nav/side-bar-nav.js";
