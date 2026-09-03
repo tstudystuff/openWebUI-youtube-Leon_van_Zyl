@@ -1,6 +1,6 @@
- // main-script.js
- // ===== Imports =====
- // import { allSideBarLinks } from "nav/side-bar-nav.js";
+// main-script.js
+// ===== Imports =====
+import { setupLessonButtons } from "./ui/nxt-prev-btns.js";
 import { injectContent } from "./core/inject-content.js";
 import { updateAllSideBarLinks } from "./nav/side-bar-nav.js";
 const nxtBtn = document.querySelector('#endNxtBtn');
@@ -8,7 +8,7 @@ const prevBtn = document.querySelector('#prevBtn');
 import { initTutorialLink } from "./ui/change-tutorial-link.js";
 import { letterFocus } from "./nav/letter-focus.js";
 import { getFocusZone } from "./nav/get-focus-zone.js";
-import { initDropDowns,hideTopicSnips } from "./ui/drop-downs-sidebar-temp.js";
+import { initDropDowns, hideTopicSnips } from "./ui/drop-downs-sidebar-temp.js";
 import { handleStepNav, lastStep } from "./nav/step-nav.js";
 import { initToggleSidebar, mainContainer, sideBar, sideBarBtn } from "./ui/toggle-side-bar.js";
 import { sideBarNav, lastClickedSideBarLink, lastFocusedSideBarLink } from "./nav/side-bar-nav.js";
@@ -55,122 +55,124 @@ function setupSidebarShortcuts() {
 }
 export function handleSKeySideBarNav(e) {
     const key = e.key.toLowerCase();
-    if(key === 's'){
+    if (key === 's') {
         e.preventDefault();
         e.stopPropagation();
-        if(mainContainer.classList.contains('collapsed')){
+        if (mainContainer.classList.contains('collapsed')) {
             mainContainer.classList.remove('collapsed')
         }
         // Ensure references exist before using them
         if (!lastClickedSideBarLink && !lastFocusedSideBarLink) return;
         const dropSnips = lastClickedSideBarLink?.closest?.('ul');
-        if (!mainContainer.classList.contains('collapsed')){
+        if (!mainContainer.classList.contains('collapsed')) {
 
             if (lastClickedSideBarLink && dropSnips && !dropSnips.classList.contains('hide')) {
                 lastClickedSideBarLink.focus();
-            } else if(lastFocusedSideBarLink ) {
+            } else if (lastFocusedSideBarLink) {
                 lastFocusedSideBarLink?.focus();
             }
         } else {
-            return 
+            return
         }
     }
 }
 // ===== Global Key Listener =====
 function setupGlobalKeyListener() {
-    
+
     addEventListener('keydown', (e) => {
+
         if (!e || !e.key) return;
+
         const key = e.key.toLowerCase();
+
         let focusZone = getFocusZone({ e });
-        if (e.key.toLowerCase() === 't') {
-            tutorialLink.focus()
-            return
+
+
+        if (key === 't') {
+            tutorialLink.focus();
+            return;
         }
-        
-        
-        // /////////////////       I DID IT !!!!!!!!!         /////////////////
-        const allowedKeys = ['b','c','d','e','h','p','n']
-        if(allowedKeys.includes(key)) {
-            focusZone = 'header'
+
+
+        const allowedKeys = [
+            'b',
+            'c',
+            'd',
+            'e',
+            'h',
+            'p',
+            'n'
+        ];
+
+        if (allowedKeys.includes(key)) {
+            focusZone = 'header';
         }
-        if(e.target === mainTargetDiv){
-            focusZone = 'mainTargetDiv'
-            if(key === 'enter'){
-                const firstStep = mainTargetDiv.querySelector('.step-float')
-                firstStep.focus()
+
+
+        if (e.target === mainTargetDiv) {
+
+            focusZone = 'mainTargetDiv';
+
+            if (key === 'enter') {
+
+                const firstStep =
+                    mainTargetDiv.querySelector('.step-float');
+
+                firstStep?.focus();
             }
         }
-        /** The ABOVE 4 LINES !!! fixes it ALLL!!, I sandboxed in when to be each focusZone with THIS !!!!
-         * Took since pretty much March 25', but this page particulary since August, it's now November 22,2025
-         */
-        // Always allow letterFocus everywhere (header, outside zones, etc.)
-        // --- normal per-zone behavior ---        
+
+
         switch (focusZone) {
+
             case 'sideBar':
-                sideBarNav({ e, focusZone });
+
+                sideBarNav({
+                    e,
+                    focusZone
+                });
+
                 break;
+
+
             case 'mainTargetDiv':
-                mainContentNav({ e, focusZone });
+
+                mainContentNav({
+                    e,
+                    focusZone
+                });
+
                 break;
+
+
             case 'header':
-                // header links will respond naturally to letterFocus
-                letterFocus({e, focusZone})
-                break;
-            default:
-                // Nothing now
+
+                letterFocus({
+                    e,
+                    focusZone
+                });
+
                 break;
         }
 
-        // Remove this once you implement best letterfocus / keyboard nav
-        if (e.key.toLowerCase() === 'h') {
-            if (e.target.id === 'homepageSidebar'){
-                
-                homepage.focus()
-            } else
-            if (e.target.dataset.id === 'homePageLink'){
-                homepageSideBar.focus()
+
+        if (key === 'h') {
+
+            if (e.target.id === 'homepageSidebar') {
+
+                homepage.focus();
+
+            } else if (
+                e.target.dataset.id === 'homePageLink'
+            ) {
+
+                homepageSideBar.focus();
             }
         }
     });
-    nxtBtn.addEventListener('click', (e) => {
-        e.preventDefault();
 
-        const allLinks = [...updateAllSideBarLinks()];
 
-        const currentIndex = allLinks.indexOf(lastClickedSideBarLink);
-
-        const startIndex = currentIndex === -1 ? 0 : currentIndex;
-
-        const nextLink = allLinks[startIndex + 1];
-
-        if (!nextLink) return;
-
-        // THIS is the important fix:
-        nextLink.focus();
-
-        nextLink.click();
-    });
-    prevBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-
-        const allLinks = [...updateAllSideBarLinks()];
-
-        const currentIndex = allLinks.indexOf(lastClickedSideBarLink);
-
-        const startIndex = currentIndex === -1 ? 0 : currentIndex;
-
-        const nextLink = allLinks[startIndex + 1];
-
-        if (!nextLink) return;
-
-        // THIS is the important fix:
-        nextLink.focus();
-
-        nextLink.click();
-    });
-    
-        
+    setupLessonButtons(nxtBtn, prevBtn, updateAllSideBarLinks, lastClickedSideBarLink, mainContainer);
 }
 
 function setHighlight(el) {
