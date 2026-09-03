@@ -20,9 +20,25 @@ export function letterFocus({ e, focusZone }) {
     });
     // Filter elements by ID starting with pressed key
     const matching = allEls.filter(el => {
-        const id = el.id?.toLowerCase?.() || '';
+
+        const navTarget =
+            el.dataset.navTarget?.toLowerCase() || '';
+
+        const id =
+            el.id?.toLowerCase() || '';
+
+        const textTarget =
+            el.matches('a')
+                ? el.textContent.trim().toLowerCase()
+                : '';
+
+        const target =
+            navTarget ||
+            id ||
+            textTarget;
+
         return (
-            id.startsWith(key) &&
+            target.startsWith(key) &&
             id !== 'targetdiv' &&
             id !== 'targetheaderh3'
         );

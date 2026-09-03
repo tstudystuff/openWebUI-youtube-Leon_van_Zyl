@@ -1,0 +1,57 @@
+/* =========================================================
+   LETTER NAVIGATION MODE
+   ========================================================= */
+
+body {
+    transition:
+        background-color 0.2s ease;
+}
+
+
+body.letter-nav-mode {
+    background-color: #dcecff;
+}
+
+/* =========================================================
+   LETTER NAV MODE POPUP
+   ========================================================= */
+
+#letterNavModePopup {
+    position: fixed;
+
+    top: 18px;
+    left: 50%;
+
+    transform:
+        translateX(-50%)
+        translateY(-15px);
+
+    padding: 10px 18px;
+
+    background: rgba(20, 40, 65, 0.94);
+    color: white;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    z-index: 99999;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
+}
+
+
+#letterNavModePopup.show {
+
+    opacity: 1;
+
+    transform:
+        translateX(-50%)
+        translateY(0);
+}

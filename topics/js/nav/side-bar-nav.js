@@ -88,24 +88,24 @@ allSideBarLinks.forEach((el, i) => {
     el.addEventListener('keydown', e => {
         const key = e.key.toLowerCase();
 
-        if (key === 'enter') {
-            e.preventDefault();
+            if (key === 'enter') {
+                e.preventDefault();
 
-            const sameLink = el === lastClickedSideBarLink;
+                const sameLink = el === lastClickedSideBarLink;
 
-            injectContent(el.href).then(() => {
-                changeTutorialLink(e);
+                injectContent(el.href).then(() => {
+                    changeTutorialLink(e);
 
-                lastClickedSideBarLink = el;
-                lastFocusedSideBarLink = el;
+                    lastClickedSideBarLink = el;
+                    lastFocusedSideBarLink = el;
 
-                if (sameLink) {
-                    focusFirstStep();
-                }
-            });
+                    if (sameLink) {
+                        focusFirstStep();
+                    }
+                });
 
-            return;
-        }
+                return;
+            }
 
         if (key === 'm') {
             handleMKey({ e, focusZone: mainTargetDiv });
