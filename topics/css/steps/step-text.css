@@ -3,6 +3,10 @@
     flex-direction: column !important;
 }
 
+.step-content p strong {
+    font-size: 120% !important;
+}
+
 /* steps.css */
 .steps-container {
     display: flex;

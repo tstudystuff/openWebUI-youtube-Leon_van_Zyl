@@ -4,6 +4,10 @@
     --bluecolor: rgb(108, 113, 115);
 }
 
+.rb {
+    color: royalblue !important;
+}
+
 body {
     background-color: whitesmoke;
 }
