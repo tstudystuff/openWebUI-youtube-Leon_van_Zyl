@@ -1,22 +1,13 @@
 /* vid-controls.css */
-/* CLICKED / ACTIVE CONTROL */
-
-.vid-cntrl-btns>button.control-active {
-    background: rgba(255, 255, 255, 0.28);
-}
-
-/* PLAY BUTTON WHILE VIDEO IS PLAYING */
-
-.vid-cntrl-btns>.playbtn.is-playing {
-    background: rgba(255, 255, 255, 0.16);
-}
-
 /* =========================================================
-   STEP VIDEO CONTROLS
+   VIDEO CONTROLS
+   css/ui/vid-controls.css
    ========================================================= */
 
 
-/* VIDEO + CONTROL BAR WRAPPER */
+/* =========================================================
+   VIDEO WRAPPER
+   ========================================================= */
 
 .step-vid {
     display: flex;
@@ -31,7 +22,9 @@
 }
 
 
-/* VIDEO */
+/* =========================================================
+   VIDEO
+   ========================================================= */
 
 .step-vid>video {
     display: block;
@@ -46,7 +39,7 @@
 
 /* =========================================================
    CONTROL BAR
-   ALWAYS VISIBLE
+   Always visible
    ========================================================= */
 
 .vid-cntrl-btns {
@@ -56,12 +49,12 @@
     align-items: stretch;
 
     width: 100%;
-    height: 38px;
+    height: 40px;
 
     margin: 0;
     padding: 0;
 
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 
     background: #252525;
 
@@ -70,8 +63,8 @@
 
 
 /* =========================================================
-   BUTTONS
-   Each button gets exactly 1/3 of the bar
+   CONTROL BUTTONS
+   Equal width
    ========================================================= */
 
 .vid-cntrl-btns>button {
@@ -96,26 +89,35 @@
 
     font-family: inherit;
     font-size: 1rem;
+    font-weight: 600;
 
     cursor: pointer;
+
+    transition:
+        background-color 0.12s ease,
+        transform 0.08s ease;
 }
 
 
-/* REMOVE LAST DIVIDER */
+/* remove last divider */
 
 .vid-cntrl-btns>button:last-child {
     border-right: 0;
 }
 
 
-/* HOVER */
+/* =========================================================
+   HOVER
+   ========================================================= */
 
 .vid-cntrl-btns>button:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.10);
 }
 
 
-/* KEYBOARD FOCUS */
+/* =========================================================
+   KEYBOARD FOCUS
+   ========================================================= */
 
 .vid-cntrl-btns>button:focus-visible {
     outline: 2px solid white;
@@ -125,8 +127,69 @@
 }
 
 
-/* PRESSED */
+/* =========================================================
+   CLICK / KEYBOARD FEEDBACK
+   Used by JS for:
+   - rewind click
+   - forward click
+   - ArrowLeft
+   - ArrowRight
+   - play/pause click
+   ========================================================= */
+
+.vid-cntrl-btns>button.control-active {
+    background: rgba(255, 255, 255, 0.32);
+    transform: scale(0.97);
+}
+
+
+/* =========================================================
+   PLAYING STATE
+   Slightly highlight center button while video is playing
+   ========================================================= */
+
+.vid-cntrl-btns>.playbtn.is-playing {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+
+/* =========================================================
+   PRESSED
+   ========================================================= */
 
 .vid-cntrl-btns>button:active {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.30);
+}
+
+
+/* =========================================================
+   ENLARGED VIDEO
+   Controls remain directly underneath video
+   ========================================================= */
+
+.step-vid.enlarge .vid-cntrl-btns {
+    position: static;
+
+    display: flex;
+
+    width: 100%;
+}
+
+
+/* =========================================================
+   ENLARGED CONTROL BAR
+   Slightly easier to hit
+   ========================================================= */
+
+.step-vid.enlarge .vid-cntrl-btns {
+    height: 44px;
+}
+
+
+/* =========================================================
+   ENLARGED BUTTON TEXT
+   ========================================================= */
+
+.step-vid.enlarge .vid-cntrl-btns>button {
+    font-size: 1.1rem;
 }
