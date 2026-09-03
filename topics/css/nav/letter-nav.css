@@ -1,6 +1,14 @@
 /* =========================================================
    LETTER NAVIGATION MODE
    ========================================================= */
+/* .step-float:hover ,*/
+body.letter-nav-mode .step-float:focus,
+body.letter-nav-mode .step-float:active {
+    box-shadow: 2px 2px 10px lightblue;
+    border: 2px solid darkslategray;
+    box-shadow: 2px 1px 10px rgb(116, 100, 60);
+    outline: none
+}
 
 body {
     transition:
