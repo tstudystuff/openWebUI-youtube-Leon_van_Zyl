@@ -1,10 +1,10 @@
 // js/nav/step-nav.js
-
 import {
     cycleStepMedia,
     denlargeAllImages,
     updateImgs,
-    clickToggleEnlarge
+    clickToggleEnlarge,
+    toggleStepMedia
 } from "../ui/toggle-img-sizes.js";
 
 import {
@@ -42,10 +42,26 @@ export function removeLastStep() {
     lastStep = null;
 }
 
+
 function updateCurrentCopyCodes({ step }) {
+
     copyCodes = [
-        ...step.querySelectorAll(".copy-code")
+        ...step.querySelectorAll(
+            ".copy-code"
+        )
     ];
+
+}
+
+
+function getStepFocusableItems(step) {
+
+    return [
+        ...step.querySelectorAll(
+            ".copy-code, a[href]"
+        )
+    ];
+
 }
 
 
@@ -53,12 +69,19 @@ function updateCurrentCopyCodes({ step }) {
    INITIALIZE STEP NAVIGATION
    ========================================================= */
 
-export function initStepNavigation({ mainTargetDiv }) {
+export function initStepNavigation({
+    mainTargetDiv
+}) {
+
     if (!mainTargetDiv) return;
 
+
     steps = [
-        ...mainTargetDiv.querySelectorAll(".step-float")
+        ...mainTargetDiv.querySelectorAll(
+            ".step-float"
+        )
     ];
+
 
     allStepImgVids = [
         ...mainTargetDiv.querySelectorAll(
@@ -66,7 +89,11 @@ export function initStepNavigation({ mainTargetDiv }) {
         )
     ];
 
-    updateImgs(mainTargetDiv);
+
+    updateImgs(
+        mainTargetDiv
+    );
+
 
     allVids = [
         ...mainTargetDiv.querySelectorAll(
@@ -79,15 +106,21 @@ export function initStepNavigation({ mainTargetDiv }) {
        CLICK OUTSIDE MEDIA
        ===================================================== */
 
-    document.addEventListener("pointerdown", e => {
-        const media = e.target.closest(
-            ".step-img, .step-vid"
-        );
+    document.addEventListener(
+        "pointerdown",
+        e => {
 
-        if (media) return;
+            const media =
+                e.target.closest(
+                    ".step-img, .step-vid"
+                );
 
-        denlargeAllImages();
-    });
+            if (media) return;
+
+            denlargeAllImages();
+
+        }
+    );
 
 
     /* =====================================================
@@ -96,46 +129,22 @@ export function initStepNavigation({ mainTargetDiv }) {
 
     allVids.forEach(vid => {
 
-        const stepVid = vid.closest(".step-vid");
+        const stepVid =
+            vid.closest(
+                ".step-vid"
+            );
 
         if (!stepVid) return;
 
 
-        /* CLICK VIDEO */
+        /* -------------------------------------------------
+           CLICK VIDEO
+           ------------------------------------------------- */
 
-        vid.addEventListener("click", e => {
-            e.preventDefault();
-            e.stopPropagation();
+        vid.addEventListener(
+            "click",
+            e => {
 
-            videoControls({
-                vid,
-                e
-            });
-        });
-
-
-        /* VIDEO KEYBOARD */
-
-        vid.addEventListener("keydown", e => {
-            e.stopPropagation();
-
-            videoControls({
-                vid,
-                e
-            });
-        });
-
-
-        /* CUSTOM VIDEO CONTROL BUTTONS */
-
-        const controlButtons =
-            stepVid.querySelectorAll(
-                ".vid-cntrl-btns button"
-            );
-
-        controlButtons.forEach(button => {
-
-            button.addEventListener("click", e => {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -143,7 +152,56 @@ export function initStepNavigation({ mainTargetDiv }) {
                     vid,
                     e
                 });
-            });
+
+            }
+        );
+
+
+        /* -------------------------------------------------
+           VIDEO KEYBOARD
+           ------------------------------------------------- */
+
+        vid.addEventListener(
+            "keydown",
+            e => {
+
+                e.stopPropagation();
+
+                videoControls({
+                    vid,
+                    e
+                });
+
+            }
+        );
+
+
+        /* -------------------------------------------------
+           CUSTOM VIDEO CONTROL BUTTONS
+           ------------------------------------------------- */
+
+        const controlButtons =
+            stepVid.querySelectorAll(
+                ".vid-cntrl-btns button"
+            );
+
+
+        controlButtons.forEach(button => {
+
+            button.addEventListener(
+                "click",
+                e => {
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    videoControls({
+                        vid,
+                        e
+                    });
+
+                }
+            );
 
         });
 
@@ -156,143 +214,13 @@ export function initStepNavigation({ mainTargetDiv }) {
 
     allStepImgVids.forEach(media => {
 
-        media.addEventListener("click", e => {
+        media.addEventListener(
+            "click",
+            e => {
 
-            // Never resize from video controls
-            if (
-                e.target.closest(
-                    ".vid-cntrl-btns"
-                )
-            ) {
-                return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            clickToggleEnlarge({ e });
-        });
-
-    });
-
-
-    /* =====================================================
-       STEP EVENTS
-       ===================================================== */
-
-    steps.forEach((step, index) => {
-
-        if (step.dataset.listenerAdded) {
-            return;
-        }
-
-        step.setAttribute("tabindex", "0");
-
-
-        /* -------------------------------------------------
-           STEP FOCUS
-           ------------------------------------------------- */
-
-        step.addEventListener("focus", e => {
-
-            stepClicked = true;
-
-            iSteps = index;
-            iCopyCodes = 0;
-
-            denlargeAllImages();
-
-            lastStep = step;
-
-            stepClicked = false;
-
-
-            step.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-
-
-            if (
-                e.target === steps[steps.length - 1] &&
-                steps.length > 3
-            ) {
-                mainContainer?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "end",
-                    container: "all"
-                });
-            }
-
-
-            pauseAllVideos({
-                allVids
-            });
-
-        });
-
-
-        /* -------------------------------------------------
-           STEP FOCUS IN
-           ------------------------------------------------- */
-
-        step.addEventListener("focusin", e => {
-            iSteps = index;
-
-            // If focus moves to ANY child inside this step,
-            // remove enlarged image/video state.
-            if (e.target !== step) {
-                step.querySelectorAll(
-                    ".step-img.enlarge, .step-vid.enlarge"
-                ).forEach(media => {
-                    media.classList.remove("enlarge");
-                    media.classList.remove("first-vid-enlarge");
-                });
-            }
-        });
-
-
-        /* -------------------------------------------------
-           STEP FOCUS OUT
-           ------------------------------------------------- */
-
-        step.addEventListener("focusout", e => {
-
-            if (
-                step.contains(
-                    e.relatedTarget
-                )
-            ) {
-                return;
-            }
-
-            denlargeAllImages();
-        });
-
-
-        /* -------------------------------------------------
-           STEP KEYBOARD
-           ------------------------------------------------- */
-
-        step.addEventListener("keydown", e => {
-
-            const key = e.key;
-
-            const stepFloat =
-                e.target.closest(
-                    ".step-float"
-                );
-
-            if (!stepFloat) return;
-
-
-            /* =============================================
-               ENTER / SHIFT + ENTER
-               ============================================= */
-
-            if (key === "Enter") {
-
-                // Never cycle media from control buttons
+                /*
+                 * Never resize from video controls.
+                 */
                 if (
                     e.target.closest(
                         ".vid-cntrl-btns"
@@ -301,176 +229,511 @@ export function initStepNavigation({ mainTargetDiv }) {
                     return;
                 }
 
-                changeTutorialLink(e);
 
+                e.preventDefault();
+                e.stopPropagation();
 
-                /* -----------------------------------------
-                   NORMAL ENTER
-                   ----------------------------------------- */
-
-                if (!e.shiftKey) {
-
-                    updateCurrentCopyCodes({
-                        step: stepFloat
-                    });
-
-                    stepClicked = true;
-
-
-                    const enlargedMedia =
-                        cycleStepMedia(
-                            stepFloat
-                        );
-
-
-                    /*
-                     * If Enter lands on a video,
-                     * start playing it.
-                     */
-                    if (
-                        enlargedMedia?.classList.contains(
-                            "step-vid"
-                        )
-                    ) {
-
-                        const vid =
-                            enlargedMedia.querySelector(
-                                "video"
-                            );
-
-                        if (vid) {
-                            videoControls({
-                                vid,
-                                e
-                            });
-                        }
-                    }
-
-
-                    const firstCopyCode =
-                        stepFloat.querySelector(
-                            ".copy-code"
-                        );
-
-
-                    if (firstCopyCode) {
-                        firstCopyCode.focus();
-                    }
-
-
-                    lastStep = stepFloat;
-
-                }
-
-
-                /* -----------------------------------------
-                   SHIFT + ENTER
-                   Restart video from 0:00
-                   ----------------------------------------- */
-
-                else {
-
-                    stepFloat.focus();
-
-
-                    const enlargedMedia =
-                        cycleStepMedia(
-                            stepFloat
-                        );
-
-
-                    if (
-                        enlargedMedia?.classList.contains(
-                            "step-vid"
-                        )
-                    ) {
-
-                        const vid =
-                            enlargedMedia.querySelector(
-                                "video"
-                            );
-
-                        if (vid) {
-
-                            // Always restart video
-                            vid.currentTime = 0;
-
-                            videoControls({
-                                vid,
-                                e
-                            });
-                        }
-                    }
-
-                }
-
-                return;
-            }
-
-
-            /* =============================================
-               VIDEO KEYBOARD CONTROLS
-               ============================================= */
-
-            const stepVid =
-                stepFloat.querySelector(
-                    ".step-vid"
-                );
-
-            if (!stepVid) return;
-
-
-            const vid =
-                stepVid.querySelector(
-                    "video"
-                );
-
-            if (!vid) return;
-
-
-            if (
-                key === " " ||
-                key === "ArrowLeft" ||
-                key === "ArrowRight"
-            ) {
-                videoControls({
-                    vid,
+                clickToggleEnlarge({
                     e
                 });
+
             }
+        );
 
-        });
-
-
-        /* -------------------------------------------------
-           STEP CLICK
-           ------------------------------------------------- */
-
-        step.addEventListener("click", e => {
-            changeTutorialLink(e);
-        });
-
-
-        step.dataset.listenerAdded = "true";
     });
 
 
     /* =====================================================
-       COPY CODE EVENTS
+       STEP EVENTS
        ===================================================== */
 
-    copyCodes.forEach((el, i) => {
+    steps.forEach(
+        (step, index) => {
 
-        el.addEventListener("focus", e => {
+            if (
+                step.dataset.listenerAdded
+            ) {
+                return;
+            }
 
-            iCopyCodes = i;
 
-            lastFocusedMainEl =
-                e.target;
+            step.setAttribute(
+                "tabindex",
+                "0"
+            );
 
-        });
 
-    });
+            /* =============================================
+               STEP FOCUS
+               ============================================= */
+
+            step.addEventListener(
+                "focus",
+                e => {
+
+                    /*
+                     * Focusing the step container means
+                     * we are navigating STEPS, not inside
+                     * the step yet.
+                     */
+                    stepClicked = false;
+
+                    iSteps = index;
+                    iCopyCodes = 0;
+
+                    denlargeAllImages();
+
+                    lastStep =
+                        step;
+
+
+                    step.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+
+
+                    if (
+                        e.target ===
+                        steps[
+                        steps.length - 1
+                        ] &&
+                        steps.length > 3
+                    ) {
+
+                        mainContainer
+                            ?.scrollIntoView({
+                                behavior:
+                                    "smooth",
+
+                                block:
+                                    "end",
+
+                                container:
+                                    "all"
+                            });
+
+                    }
+
+
+                    pauseAllVideos({
+                        allVids
+                    });
+
+                }
+            );
+
+
+            /* =============================================
+               STEP FOCUS IN
+               ============================================= */
+
+            step.addEventListener(
+                "focusin",
+                e => {
+
+                    iSteps =
+                        index;
+
+
+                    /*
+                     * A child of the step received focus.
+                     *
+                     * This means we've ENTERED the step.
+                     */
+                    if (
+                        e.target !== step
+                    ) {
+
+                        stepClicked =
+                            true;
+
+
+                        /*
+                         * Keep copy-code state synchronized.
+                         */
+                        if (
+                            e.target.classList
+                                ?.contains(
+                                    "copy-code"
+                                )
+                        ) {
+
+                            updateCurrentCopyCodes({
+                                step
+                            });
+
+
+                            const copyIndex =
+                                copyCodes.indexOf(
+                                    e.target
+                                );
+
+
+                            if (
+                                copyIndex !== -1
+                            ) {
+
+                                iCopyCodes =
+                                    copyIndex;
+
+                            }
+
+
+                            lastFocusedMainEl =
+                                e.target;
+
+                        }
+
+
+                        /*
+                         * Any child focus removes
+                         * enlarged image/video state.
+                         */
+                        step.querySelectorAll(
+                            ".step-img.enlarge, .step-vid.enlarge"
+                        ).forEach(media => {
+
+                            media.classList.remove(
+                                "enlarge"
+                            );
+
+                            media.classList.remove(
+                                "first-vid-enlarge"
+                            );
+
+                        });
+
+                    }
+
+                }
+            );
+
+
+            /* =============================================
+               STEP FOCUS OUT
+               ============================================= */
+
+            step.addEventListener(
+                "focusout",
+                e => {
+
+                    /*
+                     * Focus stayed somewhere inside
+                     * the same step.
+                     */
+                    if (
+                        step.contains(
+                            e.relatedTarget
+                        )
+                    ) {
+                        return;
+                    }
+
+
+                    denlargeAllImages();
+
+                }
+            );
+
+
+            /* =============================================
+               STEP KEYBOARD
+               ============================================= */
+
+            step.addEventListener(
+                "keydown",
+                e => {
+
+                    const key =
+                        e.key;
+
+
+                    const stepFloat =
+                        e.target.closest(
+                            ".step-float"
+                        );
+
+
+                    if (!stepFloat) return;
+                    /* =====================================
+                       LINK SHIFT + ENTER
+                       TOGGLE STEP MEDIA SIZE
+                       ===================================== */
+
+                    if (
+                        key === "Enter" &&
+                        e.shiftKey &&
+                        e.target.closest("a[href]")
+                    ) {
+
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        toggleStepMedia(
+                            stepFloat
+                        );
+
+                        return;
+                    }
+
+                    /* =====================================
+                       ENTER / SHIFT + ENTER
+                       ===================================== */
+
+                    if (
+                        key === "Enter"
+                    ) {
+
+                        /*
+                         * Never cycle media from
+                         * custom video buttons.
+                         */
+                        if (
+                            e.target.closest(
+                                ".vid-cntrl-btns"
+                            )
+                        ) {
+                            return;
+                        }
+
+
+                        changeTutorialLink(
+                            e
+                        );
+
+
+                        /* ---------------------------------
+                           NORMAL ENTER
+                           --------------------------------- */
+
+                        if (
+                            !e.shiftKey
+                        ) {
+
+                            updateCurrentCopyCodes({
+                                step:
+                                    stepFloat
+                            });
+
+
+                            stepClicked =
+                                true;
+
+
+                            const enlargedMedia =
+                                cycleStepMedia(
+                                    stepFloat
+                                );
+
+
+                            /*
+                             * If Enter enlarges a video,
+                             * start playing it.
+                             */
+                            if (
+                                enlargedMedia
+                                    ?.classList
+                                    .contains(
+                                        "step-vid"
+                                    )
+                            ) {
+
+                                const vid =
+                                    enlargedMedia
+                                        .querySelector(
+                                            "video"
+                                        );
+
+
+                                if (vid) {
+
+                                    videoControls({
+                                        vid,
+                                        e
+                                    });
+
+                                }
+
+                            }
+
+
+                            /*
+                             * Entering a step begins on
+                             * the first copy-code.
+                             *
+                             * If there is no copy-code,
+                             * try the first link.
+                             */
+                            const firstCopyCode =
+                                stepFloat
+                                    .querySelector(
+                                        ".copy-code"
+                                    );
+
+
+                            const firstLink =
+                                stepFloat
+                                    .querySelector(
+                                        "a[href]"
+                                    );
+
+
+                            if (
+                                firstCopyCode
+                            ) {
+
+                                firstCopyCode
+                                    .focus();
+
+                            } else if (
+                                firstLink
+                            ) {
+
+                                firstLink
+                                    .focus();
+
+                            }
+
+
+                            lastStep =
+                                stepFloat;
+
+                        }
+
+
+                        /* ---------------------------------
+                           SHIFT + ENTER
+                           RESTART VIDEO
+                           --------------------------------- */
+
+                        else {
+
+                            stepFloat.focus();
+
+
+                            const enlargedMedia =
+                                cycleStepMedia(
+                                    stepFloat
+                                );
+
+
+                            if (
+                                enlargedMedia
+                                    ?.classList
+                                    .contains(
+                                        "step-vid"
+                                    )
+                            ) {
+
+                                const vid =
+                                    enlargedMedia
+                                        .querySelector(
+                                            "video"
+                                        );
+
+
+                                if (vid) {
+
+                                    vid.currentTime =
+                                        0;
+
+
+                                    videoControls({
+                                        vid,
+                                        e
+                                    });
+
+                                }
+
+                            }
+
+                        }
+
+
+                        return;
+
+                    }
+
+
+                    /* =====================================
+                       VIDEO KEYBOARD CONTROLS
+                       ===================================== */
+
+                    const stepVid =
+                        stepFloat
+                            .querySelector(
+                                ".step-vid"
+                            );
+
+
+                    if (!stepVid) return;
+
+
+                    const vid =
+                        stepVid
+                            .querySelector(
+                                "video"
+                            );
+
+
+                    if (!vid) return;
+
+
+                    if (
+                        key === " " ||
+                        key ===
+                        "ArrowLeft" ||
+                        key ===
+                        "ArrowRight"
+                    ) {
+
+                        videoControls({
+                            vid,
+                            e
+                        });
+
+                    }
+
+                }
+            );
+
+
+            /* =============================================
+               STEP CLICK
+               ============================================= */
+
+            step.addEventListener(
+                "click",
+                e => {
+
+                    changeTutorialLink(
+                        e
+                    );
+
+
+                    /*
+                     * Clicking a CHILD inside a step means
+                     * we've entered the step.
+                     */
+                    if (
+                        e.target !== step
+                    ) {
+
+                        stepClicked =
+                            true;
+
+                    }
+
+                }
+            );
+
+
+            step.dataset.listenerAdded =
+                "true";
+
+        }
+    );
 
 
     /* =====================================================
@@ -485,34 +748,47 @@ export function initStepNavigation({ mainTargetDiv }) {
                 e.key.toLowerCase();
 
 
-            /* M */
+            /* =============================================
+               M
+               RETURN TO CURRENT STEP CONTAINER
+               ============================================= */
 
-            if (key === "m") {
+            if (
+                key === "m"
+            ) {
 
                 const step =
                     e.target.closest(
                         ".step-float"
                     );
 
+
                 if (step) {
 
                     e.preventDefault();
+                    e.stopPropagation();
 
-                    stepClicked = false;
+                    stepClicked =
+                        false;
 
                     step.focus();
 
                     return;
+
                 }
+
             }
 
 
-            /* COPY-CODE ENTER */
+            /* =============================================
+               COPY-CODE ENTER
+               ============================================= */
 
             if (
-                e.target.classList.contains(
-                    "copy-code"
-                ) &&
+                e.target.classList
+                    .contains(
+                        "copy-code"
+                    ) &&
                 e.key === "Enter"
             ) {
 
@@ -520,19 +796,27 @@ export function initStepNavigation({ mainTargetDiv }) {
                 e.stopPropagation();
 
                 return;
+
             }
 
 
-            /* NUMBER NAV */
+            /* =============================================
+               NUMBER NAV
+               ============================================= */
 
             if (
-                !Number.isNaN(
-                    Number(key)
+                /^[1-9]$/.test(
+                    key
                 )
             ) {
+
+                e.preventDefault();
+
                 numStepNav(
-                    Number(key)
+                    Number(key),
+                    e.target
                 );
+
             }
 
         }
@@ -545,45 +829,83 @@ export function initStepNavigation({ mainTargetDiv }) {
    NUMBER STEP NAVIGATION
    ========================================================= */
 
-function numStepNav(intLet) {
+function numStepNav(
+    intLet,
+    target = document.activeElement
+) {
 
     if (!steps.length) return;
 
 
-    if (intLet >= steps.length) {
-
-        steps[
-            steps.length - 1
-        ]?.focus();
-
-        return;
-    }
+    const currentStep =
+        target
+            ?.closest
+            ?.(".step-float");
 
 
-    if (!stepClicked) {
-
-        if (
-            intLet > 0 &&
-            intLet <= steps.length
-        ) {
-            steps[
-                intLet - 1
-            ]?.focus();
-        }
-
-        return;
-    }
-
-
+    /*
+     * If we're truly INSIDE a step,
+     * numbers target COPY-CODES ONLY.
+     *
+     * The step container itself does not count.
+     */
     if (
-        stepClicked &&
-        copyCodes[intLet - 1]
+        currentStep &&
+        target !== currentStep
     ) {
 
-        copyCodes[
+        updateCurrentCopyCodes({
+            step:
+                currentStep
+        });
+
+
+        const copyCode =
+            copyCodes[
             intLet - 1
-        ].focus();
+            ];
+
+
+        if (copyCode) {
+
+            iCopyCodes =
+                intLet - 1;
+
+            copyCode.focus();
+
+        }
+
+
+        return;
+
     }
+
+
+    /*
+     * Outside a step, or focused directly on
+     * a step container:
+     *
+     * numbers select corresponding steps.
+     */
+    if (
+        intLet > 0 &&
+        intLet <= steps.length
+    ) {
+
+        iSteps =
+            intLet - 1;
+
+
+        stepClicked =
+            false;
+
+
+        steps[
+            iSteps
+        ]?.focus();
+
+    }
+
 }
 
 
@@ -603,6 +925,7 @@ export function handleStepNav({
         return;
     }
 
+
     const key =
         e.key.toLowerCase();
 
@@ -612,13 +935,20 @@ export function handleStepNav({
        ===================================================== */
 
     if (
-        !Number.isNaN(
-            Number(key)
+        /^[1-9]$/.test(
+            key
         )
     ) {
+
+        e.preventDefault();
+
         numStepNav(
-            Number(key)
+            Number(key),
+            e.target
         );
+
+        return;
+
     }
 
 
@@ -630,41 +960,115 @@ export function handleStepNav({
        F = FORWARD
        ===================================================== */
 
-    if (key === "f") {
-
-        if (!stepClicked) {
-
-            iSteps =
-                (iSteps + 1) %
-                steps.length;
-
-            steps[iSteps]?.focus();
-
-        } else if (
-            copyCodes.length
-        ) {
-
-            iCopyCodes =
-                (iCopyCodes + 1) %
-                copyCodes.length;
-
-            copyCodes[
-                iCopyCodes
-            ]?.focus();
-
-        }
-    }
-
-
     if (
-        key === "f" &&
-        e.target === mainTargetDiv &&
-        !stepClicked
+        key === "f"
     ) {
 
-        iSteps = 0;
+        const currentStep =
+            e.target
+                .closest
+                ?.(".step-float");
 
-        steps[0]?.focus();
+
+        const insideStep =
+            currentStep &&
+            e.target !== currentStep;
+
+
+        /* ---------------------------------------------
+           INSIDE STEP
+           COPY-CODES + LINKS
+           --------------------------------------------- */
+
+        if (
+            insideStep
+        ) {
+
+            const focusableItems =
+                getStepFocusableItems(
+                    currentStep
+                );
+
+
+            if (
+                !focusableItems.length
+            ) {
+                return;
+            }
+
+
+            const currentIndex =
+                focusableItems
+                    .indexOf(
+                        document.activeElement
+                    );
+
+
+            const nextIndex =
+                currentIndex === -1
+
+                    ? 0
+
+                    : (
+                        currentIndex +
+                        1
+                    ) %
+                    focusableItems.length;
+
+
+            focusableItems[
+                nextIndex
+            ]?.focus();
+
+
+            return;
+
+        }
+
+
+        /* ---------------------------------------------
+           STEP CONTAINER
+           NAVIGATE THROUGH STEPS
+           --------------------------------------------- */
+
+        if (!steps.length) return;
+
+
+        /*
+         * When beginning from mainTargetDiv,
+         * start at step 1.
+         */
+        if (
+            e.target ===
+            mainTargetDiv
+        ) {
+
+            iSteps =
+                0;
+
+        } else {
+
+            iSteps =
+                (
+                    iSteps +
+                    1
+                ) %
+                steps.length;
+
+        }
+
+
+        stepClicked =
+            false;
+
+
+        steps[
+            iSteps
+        ]?.focus();
+
+
+        return;
+
     }
 
 
@@ -672,38 +1076,102 @@ export function handleStepNav({
        A = BACKWARD
        ===================================================== */
 
-    if (key === "a") {
+    if (
+        key === "a"
+    ) {
 
-        if (!stepClicked) {
+        const currentStep =
+            e.target
+                .closest
+                ?.(".step-float");
 
-            iSteps =
-                (
-                    iSteps -
-                    1 +
-                    steps.length
-                ) %
-                steps.length;
 
-            steps[
-                iSteps
-            ]?.focus();
+        const insideStep =
+            currentStep &&
+            e.target !== currentStep;
 
-        } else if (
-            copyCodes.length
+
+        /* ---------------------------------------------
+           INSIDE STEP
+           COPY-CODES + LINKS
+           --------------------------------------------- */
+
+        if (
+            insideStep
         ) {
 
-            iCopyCodes =
-                (
-                    iCopyCodes -
-                    1 +
-                    copyCodes.length
-                ) %
-                copyCodes.length;
+            const focusableItems =
+                getStepFocusableItems(
+                    currentStep
+                );
 
-            copyCodes[
-                iCopyCodes
+
+            if (
+                !focusableItems.length
+            ) {
+                return;
+            }
+
+
+            const currentIndex =
+                focusableItems
+                    .indexOf(
+                        document.activeElement
+                    );
+
+
+            const previousIndex =
+                currentIndex === -1
+
+                    ? focusableItems.length -
+                    1
+
+                    : (
+                        currentIndex -
+                        1 +
+                        focusableItems.length
+                    ) %
+                    focusableItems.length;
+
+
+            focusableItems[
+                previousIndex
             ]?.focus();
+
+
+            return;
+
         }
+
+
+        /* ---------------------------------------------
+           STEP CONTAINER
+           NAVIGATE THROUGH STEPS
+           --------------------------------------------- */
+
+        if (!steps.length) return;
+
+
+        iSteps =
+            (
+                iSteps -
+                1 +
+                steps.length
+            ) %
+            steps.length;
+
+
+        stepClicked =
+            false;
+
+
+        steps[
+            iSteps
+        ]?.focus();
+
+
+        return;
+
     }
 
 
@@ -711,17 +1179,26 @@ export function handleStepNav({
        S = SIDEBAR
        ===================================================== */
 
-    if (key === "s") {
+    if (
+        key === "s"
+    ) {
 
-        stepClicked = false;
+        stepClicked =
+            false;
+
 
         if (
             lastClickedSideBarLink
         ) {
-            lastClickedSideBarLink.focus();
+
+            lastClickedSideBarLink
+                .focus();
+
         }
 
+
         return;
+
     }
 
 
@@ -729,9 +1206,15 @@ export function handleStepNav({
        T = TUTORIAL LINK
        ===================================================== */
 
-    if (key === "t") {
-        tutorialLink?.focus();
+    if (
+        key === "t"
+    ) {
+
+        tutorialLink
+            ?.focus();
+
     }
+
 }
 
 
@@ -748,18 +1231,21 @@ document.addEventListener(
                 ".step-float"
             );
 
+
         if (!step) return;
 
 
-        document.querySelectorAll(
-            ".step-float.selected"
-        ).forEach(el => {
+        document
+            .querySelectorAll(
+                ".step-float.selected"
+            )
+            .forEach(el => {
 
-            el.classList.remove(
-                "selected"
-            );
+                el.classList.remove(
+                    "selected"
+                );
 
-        });
+            });
 
 
         step.classList.add(
