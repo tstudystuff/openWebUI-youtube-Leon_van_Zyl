@@ -59,3 +59,8 @@ body.letter-nav-mode .main-content-container {
     transform:
         translateX(-50%) translateY(0);
 }
+
+body.letter-nav-mode .side-bar ul li a,
+body.dark-mode.letter-nav-mode .side-bar ul li a {
+    color: black !important;
+}

@@ -109,3 +109,20 @@ body.dark-mode .side-bar ul li a.highlight {
 body.dark-mode .highlight {
     color: black !important;
 }
+
+/* =========================================================
+   LETTER NAVIGATION MODE
+   Must override dark mode
+   ========================================================= */
+
+body.letter-nav-mode {
+    background-color: #dcecff;
+    color: black !important;
+}
+
+body.letter-nav-mode .main-content-container,
+body.letter-nav-mode .main-content-container *,
+body.dark-mode.letter-nav-mode .main-content-container,
+body.dark-mode.letter-nav-mode .main-content-container * {
+    color: black !important;
+}
