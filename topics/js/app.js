@@ -3,8 +3,8 @@
 import { setupLessonButtons } from "./ui/nxt-prev-btns.js";
 import { injectContent } from "./core/inject-content.js";
 import { updateAllSideBarLinks } from "./nav/side-bar-nav.js";
-const nxtBtn = document.querySelector('#endNxtBtn');
-const prevBtn = document.querySelector('#prevBtn');
+// const nxtBtn = document.querySelector('#endNxtBtn');
+// const prevBtn = document.querySelector('#prevBtn');
 import { initTutorialLink } from "./ui/change-tutorial-link.js";
 import { letterFocus } from "./nav/letter-focus.js";
 import { getFocusZone } from "./nav/get-focus-zone.js";
@@ -172,7 +172,10 @@ function setupGlobalKeyListener() {
     });
 
 
-    setupLessonButtons(nxtBtn, prevBtn,);
+    setupLessonButtons(
+        document.querySelector('#endNxtBtn'),
+        document.querySelector('#prevBtn')
+    );
 }
 
 function setHighlight(el) {
