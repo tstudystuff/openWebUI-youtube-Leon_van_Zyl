@@ -1,21 +1,24 @@
 // js/ui/playStepVid.js
+
 let playing = false;
 
 const ACTIVE_CLASS = "control-active";
 const CONTROL_FLASH_TIME = 180;
 
 
+/*
+ * Tracks videos that already have an ended listener.
+ *
+ * Because lessons are dynamically injected, this prevents
+ * accidentally attaching the same listener multiple times
+ * to the same video element.
+ */
+const endedResetVideos =
+    new WeakSet();
+
+
 /* =========================================================
    VIDEO / CONTROL HELPERS
-
-   Videos may live inside either:
-
-       .step-vid
-       .img-container
-
-   This restores support for videos inside the older
-   img-container structure while preserving normal
-   step-vid behavior.
    ========================================================= */
 
 function getVideoContainer(vid) {
@@ -26,13 +29,6 @@ function getVideoContainer(vid) {
 
 }
 
-
-/* =========================================================
-   GET STEP-VID ONLY
-
-   Used when we specifically need the modern .step-vid
-   wrapper for enlargement.
-   ========================================================= */
 
 function getStepVid(vid) {
 
@@ -68,9 +64,6 @@ function getControls(vid) {
 
     return {
 
-        /*
-         * Existing HTML/button naming preserved.
-         */
         rewindBtn:
             container.querySelector(
                 ".fwdBtn"
@@ -106,13 +99,6 @@ function syncVideoSize(vid) {
         );
 
 
-    /*
-     * Videos directly inside .img-container do not need
-     * this special wrapper sizing logic.
-     *
-     * Their size continues to be controlled by the
-     * img-container / normal stylesheet.
-     */
     if (!stepVid) return;
 
 
@@ -127,12 +113,6 @@ function syncVideoSize(vid) {
 
     if (enlarged) {
 
-        /*
-         * Critical mobile fix:
-         *
-         * The wrapper already enlarges.
-         * Force the real video element to fill it.
-         */
         vid.style.width =
             "100%";
 
@@ -148,9 +128,6 @@ function syncVideoSize(vid) {
 
     } else {
 
-        /*
-         * Hand control back to normal CSS.
-         */
         vid.style.removeProperty(
             "width"
         );
@@ -211,7 +188,9 @@ export function updatePlayButton(vid) {
 
     const {
         playBtn
-    } = getControls(vid);
+    } = getControls(
+        vid
+    );
 
 
     if (!playBtn) return;
@@ -252,6 +231,276 @@ export function updatePlayButton(vid) {
 
 
 /* =========================================================
+   RESET VIDEO TO POSTER
+
+   Used by Shift + Enter.
+
+   Also useful whenever we explicitly want:
+
+       paused
+       timestamp 0
+       poster visible
+
+   Enlargement state is preserved.
+   ========================================================= */
+
+/* =========================================================
+   RESET VIDEO TO POSTER
+
+   Final desired state:
+
+       - paused
+       - timestamp 0
+       - poster visible
+       - play button shows ▶
+
+   IMPORTANT:
+   load() itself resets the media back to its initial
+   presentation state, so we do NOT seek again after load().
+   ========================================================= */
+
+export function resetVideoToPoster(vid) {
+
+    if (!vid) return;
+
+
+    playing =
+        false;
+
+
+    /*
+     * Stop playback immediately.
+     */
+    vid.pause();
+
+
+    /*
+     * Reset position BEFORE load().
+     */
+    try {
+
+        vid.currentTime =
+            0;
+
+    } catch {
+
+        // Metadata may not currently be available.
+
+    }
+
+
+    /*
+     * This is the important part.
+     *
+     * load() resets the video element and restores
+     * the poster image.
+     *
+     * Do NOT set currentTime again after this,
+     * because doing so can make the browser display
+     * frame zero instead of the poster.
+     */
+    vid.load();
+
+
+    syncVideoSize(
+        vid
+    );
+
+
+    updatePlayButton(
+        vid
+    );
+
+}
+
+
+/* =========================================================
+   NATURAL VIDEO END
+
+   IMPORTANT:
+
+   This is intentionally separate from normal pause/reset
+   controls.
+
+   When the video naturally reaches the end:
+
+       1. mark our playback state stopped
+       2. pause
+       3. disable looping/autoplay
+       4. reset the media element with load()
+       5. wait until metadata is available again
+       6. force currentTime = 0
+       7. force pause AGAIN
+       8. show the poster
+       9. restore the ▶ button
+
+   The .step-vid remains enlarged if it was enlarged.
+   ========================================================= */
+
+function ensureVideoEndedReset(vid) {
+
+    if (!vid) return;
+
+
+    /*
+     * Same video already initialized.
+     */
+    if (
+        endedResetVideos.has(
+            vid
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    vid.addEventListener(
+        "ended",
+        () => {
+
+            playing =
+                false;
+
+
+            /*
+             * Stop immediately.
+             */
+            vid.pause();
+
+
+            /*
+             * We never want natural completion to
+             * automatically begin playback again.
+             */
+            vid.autoplay =
+                false;
+
+            vid.removeAttribute(
+                "autoplay"
+            );
+
+
+            /*
+             * Make absolutely sure this video
+             * cannot loop back into playback.
+             */
+            vid.loop =
+                false;
+
+            vid.removeAttribute(
+                "loop"
+            );
+
+
+            /*
+             * Reset media state.
+             *
+             * load() is important because simply doing:
+             *
+             * currentTime = 0
+             *
+             * normally leaves frame zero visible instead
+             * of restoring the poster.
+             */
+            vid.load();
+
+
+            /*
+             * After load(), metadata becomes available
+             * again asynchronously.
+             *
+             * At that point force the FINAL state:
+             *
+             * currentTime = 0
+             * paused = true
+             */
+            const finishReset = () => {
+
+                /*
+                 * Remove immediately so this is
+                 * strictly a one-shot listener.
+                 */
+                vid.removeEventListener(
+                    "loadedmetadata",
+                    finishReset
+                );
+
+
+                playing =
+                    false;
+
+
+                /*
+                 * Force timestamp zero.
+                 */
+                try {
+
+                    vid.currentTime =
+                        0;
+
+                } catch {
+
+                    // Safe fallback.
+
+                }
+
+
+                /*
+                 * CRITICAL:
+                 *
+                 * Force paused state AFTER currentTime
+                 * has been reset.
+                 */
+                vid.pause();
+
+
+                syncVideoSize(
+                    vid
+                );
+
+
+                updatePlayButton(
+                    vid
+                );
+
+            };
+
+
+            vid.addEventListener(
+                "loadedmetadata",
+                finishReset
+            );
+
+
+            /*
+             * Some browsers may already have enough
+             * metadata immediately after load().
+             *
+             * If so, finish the reset without waiting.
+             */
+            if (
+                vid.readyState >=
+                HTMLMediaElement.HAVE_METADATA
+            ) {
+
+                finishReset();
+
+            }
+
+        }
+    );
+
+
+    endedResetVideos.add(
+        vid
+    );
+
+}
+
+
+/* =========================================================
    PLAY
    ========================================================= */
 
@@ -260,7 +509,17 @@ function playVideo(vid) {
     if (!vid) return;
 
 
-    playing = true;
+    /*
+     * Make sure natural completion automatically
+     * returns this video to its poster.
+     */
+    ensureVideoEndedReset(
+        vid
+    );
+
+
+    playing =
+        true;
 
 
     syncVideoSize(
@@ -272,10 +531,6 @@ function playVideo(vid) {
         vid.play();
 
 
-    /*
-     * Some browsers can return undefined
-     * instead of a Promise.
-     */
     if (
         playPromise &&
         typeof playPromise.then ===
@@ -288,9 +543,11 @@ function playVideo(vid) {
                 playing =
                     true;
 
+
                 syncVideoSize(
                     vid
                 );
+
 
                 updatePlayButton(
                     vid
@@ -302,9 +559,11 @@ function playVideo(vid) {
                 playing =
                     false;
 
+
                 syncVideoSize(
                     vid
                 );
+
 
                 updatePlayButton(
                     vid
@@ -314,6 +573,7 @@ function playVideo(vid) {
 
 
         return;
+
     }
 
 
@@ -322,6 +582,7 @@ function playVideo(vid) {
     );
 
 }
+
 
 /* =========================================================
    PAUSE
@@ -352,83 +613,19 @@ function pauseVideo(vid) {
 
 
 /* =========================================================
-   RESET VIDEO TO POSTER
-
-   Used when Shift + Enter is pressed while
-   a video is actively playing.
-
-   Keeps enlargement state unchanged.
-   ========================================================= */
-
-export function resetVideoToPoster(vid) {
-
-    if (!vid) return;
-
-
-    playing =
-        false;
-
-
-    /*
-     * Stop playback.
-     */
-    vid.pause();
-
-
-    /*
-     * Return to beginning.
-     */
-    try {
-
-        vid.currentTime =
-            0;
-
-    } catch {
-
-        // Metadata may not be ready yet.
-
-    }
-
-
-    /*
-     * Reload the media element so the poster
-     * becomes visible again.
-     */
-    vid.load();
-
-
-    /*
-     * Preserve current enlarged sizing.
-     */
-    syncVideoSize(
-        vid
-    );
-
-
-    /*
-     * Restore play-button appearance.
-     */
-    updatePlayButton(
-        vid
-    );
-
-}
-
-
-
-/* =========================================================
    TOGGLE PLAY / PAUSE
    ========================================================= */
 
 function togglePlayPause(vid) {
-
 
     if (!vid) return;
 
 
     const {
         playBtn
-    } = getControls(vid);
+    } = getControls(
+        vid
+    );
 
 
     flashButton(
@@ -457,6 +654,17 @@ function togglePlayPause(vid) {
    REWIND
    ========================================================= */
 
+/* =========================================================
+   REWIND
+
+   Left Arrow moves backward 0.5 seconds.
+
+   If we reach the beginning:
+       - pause
+       - reset to 0
+       - show poster
+   ========================================================= */
+
 function rewindVideo(vid) {
 
     if (!vid) return;
@@ -464,7 +672,9 @@ function rewindVideo(vid) {
 
     const {
         rewindBtn
-    } = getControls(vid);
+    } = getControls(
+        vid
+    );
 
 
     flashButton(
@@ -472,17 +682,52 @@ function rewindVideo(vid) {
     );
 
 
-    vid.currentTime =
-        Math.max(
-            0,
-            vid.currentTime - 0.5
+    const nextTime =
+        vid.currentTime - 0.5;
+
+
+    /*
+     * Reaching zero means the video is finished
+     * from the rewind direction.
+     */
+    if (
+        nextTime <= 0
+    ) {
+
+        resetVideoToPoster(
+            vid
         );
+
+
+        return;
+
+    }
+
+
+    vid.currentTime =
+        nextTime;
 
 }
 
 
 /* =========================================================
    FORWARD
+   ========================================================= */
+
+/* =========================================================
+   FORWARD
+
+   Right Arrow advances the video by 0.5 seconds.
+
+   If advancing would reach or pass the end:
+
+       - stop playback
+       - return to timestamp 0
+       - restore poster
+       - remain paused
+
+   This handles the case where SEEKING to the end does not
+   fire the browser's normal "ended" event.
    ========================================================= */
 
 function forwardVideo(vid) {
@@ -492,7 +737,9 @@ function forwardVideo(vid) {
 
     const {
         forwardBtn
-    } = getControls(vid);
+    } = getControls(
+        vid
+    );
 
 
     flashButton(
@@ -510,19 +757,46 @@ function forwardVideo(vid) {
         )
     ) {
 
-        vid.currentTime =
-            Math.min(
-                vid.duration,
-                nextTime
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT seek directly to vid.duration.
+         *
+         * Seeking to the exact end does not reliably
+         * fire the native "ended" event.
+         *
+         * If Right Arrow would reach/pass the end,
+         * explicitly perform our finished-video reset.
+         */
+        if (
+            nextTime >=
+            vid.duration
+        ) {
+
+            resetVideoToPoster(
+                vid
             );
 
 
-    } else {
+            return;
+
+        }
+
 
         vid.currentTime =
             nextTime;
 
+
+        return;
+
     }
+
+
+    /*
+     * Duration not available yet.
+     */
+    vid.currentTime =
+        nextTime;
 
 }
 
@@ -548,12 +822,6 @@ export function pauseAllVideos({
             );
 
 
-        /*
-         * Only .step-vid wrappers receive these
-         * enlargement classes.
-         *
-         * img-container videos are still paused normally.
-         */
         if (stepVid) {
 
             stepVid.classList.remove(
@@ -567,10 +835,6 @@ export function pauseAllVideos({
         }
 
 
-        /*
-         * Restore normal video CSS after
-         * removing enlarged state.
-         */
         syncVideoSize(
             vid
         );
@@ -598,15 +862,6 @@ export function pauseAllVideos({
 
 /* =========================================================
    VIDEO CLICK
-
-   .step-vid:
-       clicking the video keeps the existing
-       enlarge + play behavior.
-
-   .img-container:
-       clicking the video behaves like a normal
-       video and toggles playback without
-       enlarging the entire img-container.
    ========================================================= */
 
 export function toggleVideoSizeClick({
@@ -644,10 +899,6 @@ export function toggleVideoSizeClick({
         );
 
 
-        /*
-         * Immediately synchronize the actual
-         * <video> with its wrapper.
-         */
         syncVideoSize(
             vid
         );
@@ -683,15 +934,6 @@ export function toggleVideoSizeClick({
         )
     ) {
 
-        /*
-         * Do NOT enlarge the whole img-container.
-         *
-         * The img-container itself is responsible for
-         * cycling/enlargement through the media system.
-         *
-         * Clicking the video simply behaves like a
-         * normal playable video again.
-         */
         togglePlayPause(
             vid
         );
@@ -730,9 +972,6 @@ function videoKeyControl({
                 );
 
 
-            /*
-             * Modern .step-vid behavior.
-             */
             if (stepVid) {
 
                 syncVideoSize(
@@ -764,10 +1003,6 @@ function videoKeyControl({
             }
 
 
-            /*
-             * A video inside an img-container can
-             * still be played normally.
-             */
             if (
                 vid.closest(
                     ".img-container"
@@ -794,6 +1029,10 @@ function videoKeyControl({
             e.preventDefault();
 
 
+            /*
+             * If somehow sitting exactly at the end,
+             * return to the beginning before playing.
+             */
             if (
                 Number.isFinite(
                     vid.duration
@@ -883,8 +1122,7 @@ function controlButtonClick({
 
 
     /*
-     * Absolutely prevent control buttons
-     * from becoming resize clicks.
+     * Video control buttons NEVER resize media.
      */
     e.preventDefault();
     e.stopPropagation();
@@ -899,6 +1137,7 @@ function controlButtonClick({
         togglePlayPause(
             vid
         );
+
 
         return true;
 
@@ -915,6 +1154,7 @@ function controlButtonClick({
             vid
         );
 
+
         return true;
 
     }
@@ -929,6 +1169,7 @@ function controlButtonClick({
         forwardVideo(
             vid
         );
+
 
         return true;
 
@@ -970,6 +1211,7 @@ export function videoControls({
 
 
         return;
+
     }
 
 
@@ -983,7 +1225,7 @@ export function videoControls({
     ) {
 
         /*
-         * Control-button click.
+         * Custom control-button click.
          */
         if (
             controlButtonClick({
@@ -993,12 +1235,13 @@ export function videoControls({
         ) {
 
             return;
+
         }
 
 
         /*
-         * Only clicking the actual <video>
-         * reaches the video play/enlarge handler.
+         * Only clicking the actual video reaches
+         * the video resize/play handler.
          */
         if (
             e.target === vid
