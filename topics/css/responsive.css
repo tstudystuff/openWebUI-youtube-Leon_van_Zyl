@@ -169,14 +169,9 @@
     }
 
 
-    .side-bar-links>li {
-        margin-bottom: 20%;
-    }
+    .side-bar-links>li {}
 
 
-    .side-bar-links {
-        margin-top: 50% !important;
-    }
 
 
     /* =====================================================
