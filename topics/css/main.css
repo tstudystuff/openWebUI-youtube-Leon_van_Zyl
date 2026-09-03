@@ -15,7 +15,6 @@
 /* utilities */
 @import url('utilities/borders.css');
 @import url('utilities/colors.css');
-@import url('utilities/effects.css');
 @import url('utilities/layout.css');
 @import url('utilities/position.css');
 
@@ -26,10 +25,15 @@
 @import url('steps/step-text.css');
 @import url('steps/code-containers.css');
 @import url('steps/imgSizes.css');
-*{
+@import url('utilities/effects.css');
+
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
 /* SHOULD I PUT THIS IN IT'S OWN CSS FILES FOR ui/drop-downs.css ???? */
-.hide { display: none; }
+.hide {
+    display: none;
+}

@@ -45,6 +45,16 @@ if (autoLink) {
 /* =========================
    HELPERS
 ========================= */
+function setHighlight(el) {
+
+    document
+        .querySelectorAll('.side-bar-links a.highlight')
+        .forEach(link => {
+            link.classList.remove('highlight');
+        });
+
+    el?.classList.add('highlight');
+}
 function isVisible(el) {
     return el && el.offsetParent !== null;
 }
@@ -70,7 +80,8 @@ allSideBarLinks.forEach((el, i) => {
     el.addEventListener('click', async e => {
         e.preventDefault();
 
-        const sameLink = el === lastClickedSideBarLink;
+        const sameLink =
+            el === lastClickedSideBarLink;
 
         await injectContent(el.href);
 
@@ -78,6 +89,8 @@ allSideBarLinks.forEach((el, i) => {
 
         lastClickedSideBarLink = el;
         lastFocusedSideBarLink = el;
+
+        setHighlight(el);
 
         if (sameLink) {
             focusFirstStep();
@@ -88,24 +101,29 @@ allSideBarLinks.forEach((el, i) => {
     el.addEventListener('keydown', e => {
         const key = e.key.toLowerCase();
 
-            if (key === 'enter') {
-                e.preventDefault();
+        if (key === 'enter') {
+            e.preventDefault();
 
-                const sameLink = el === lastClickedSideBarLink;
+            const sameLink =
+                el === lastClickedSideBarLink;
 
-                injectContent(el.href).then(() => {
-                    changeTutorialLink(e);
+            injectContent(el.href).then(() => {
 
-                    lastClickedSideBarLink = el;
-                    lastFocusedSideBarLink = el;
+                changeTutorialLink(e);
 
-                    if (sameLink) {
-                        focusFirstStep();
-                    }
-                });
+                lastClickedSideBarLink = el;
+                lastFocusedSideBarLink = el;
 
-                return;
-            }
+                setHighlight(el);
+
+                if (sameLink) {
+                    focusFirstStep();
+                }
+            });
+
+            return;
+        };
+
 
         if (key === 'm') {
             handleMKey({ e, focusZone: mainTargetDiv });
@@ -140,7 +158,7 @@ sideBar.addEventListener('focusout', () => sideBarFocused = false);
 ========================= */
 export function sideBarNav({ e, focusZone }) {
     if (focusZone !== 'sideBar') return;
-    if(e.target === sideBarBtn){
+    if (e.target === sideBarBtn) {
         return
     }
     if (!e?.key) return;
@@ -223,16 +241,16 @@ sideBarBtn.addEventListener('keydown', e => {
         allSideBarLinks[0].focus()
         // mainTargetDiv.focus();
     }
-    if(!isNaN(e.key.toLowerCase())){
+    if (!isNaN(e.key.toLowerCase())) {
         const intLet = parseInt(e.key.toLowerCase())
         allSideBarLinks[intLet - 1].focus()
     }
-    
+
 });
 
 sideBarBtn.addEventListener('focus', () => {
     // sideBar.scrollIntoView({ behavior: "smooth", block: "start",inline:'start' });
-    scrollTo(0,0)
+    scrollTo(0, 0)
 });
 
 function focusFirstStep() {
