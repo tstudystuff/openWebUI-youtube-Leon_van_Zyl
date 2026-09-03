@@ -17,6 +17,7 @@
 /* utilities */
 @import url('utilities/borders.css');
 @import url('utilities/colors.css');
+@import url('utilities/colors-default.css');
 @import url('utilities/layout.css');
 @import url('utilities/position.css');
 @import url('utilities/sizing.css');
