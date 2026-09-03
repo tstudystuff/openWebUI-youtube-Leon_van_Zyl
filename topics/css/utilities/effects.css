@@ -3,6 +3,7 @@
 .step-float:active {
     box-shadow: 2px 2px 10px lightblue;
     border: 2px solid lightslategray;
+    background-color: lightgrey;
     box-shadow: 2px 1px 10px rgb(116, 100, 60);
     outline: none
 }

@@ -249,7 +249,9 @@ export function initStepNavigation({
 
     steps.forEach(
         (step, index) => {
-
+            if (step.hasAttribute('data-auto-focus')) {
+                step.focus();
+            }
             if (
                 step.dataset.listenerAdded
             ) {
