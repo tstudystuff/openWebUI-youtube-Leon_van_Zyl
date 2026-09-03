@@ -45,14 +45,14 @@ export function navigateLesson(direction) {
 
 
     const targetIndex =
-        currentIndex + direction;
+        (currentIndex + direction + allLinks.length) %
+        allLinks.length;
 
 
     const targetLink =
         allLinks[targetIndex];
 
-
-    if (!targetLink) return;
+    // if (!targetLink) return;
 
 
     // Reopen sidebar
