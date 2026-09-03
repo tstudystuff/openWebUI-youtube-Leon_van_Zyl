@@ -35,16 +35,29 @@ let stepFocused = false;
 let stepClicked = false;
 
 
+/* =========================================================
+   REINITIALIZATION SAFETY
+
+   Lessons are dynamically injected.
+
+   initStepNavigation() MUST be allowed to run again after
+   every lesson load.
+
+   These two listeners belong to permanent DOM elements,
+   so they should only ever be attached ONCE.
+   ========================================================= */
+
+let documentMediaListenerAdded = false;
+let mainTargetListenerAdded = false;
+
+
 /*
- * IMPORTANT:
+ * Normal child focus should still shrink enlarged media.
  *
- * Normal child focus should still shrink enlarged media,
- * exactly like before.
+ * The ONE exception is when Enter enlarges media and then
+ * programmatically moves focus to the first copy-code/link.
  *
- * The ONE exception is when Enter itself enlarges media
- * and then programmatically focuses the first copy-code/link.
- *
- * In that case we preserve the media we JUST enlarged.
+ * In that case preserve the media that was just enlarged.
  */
 let preserveMediaOnChildFocus = false;
 
@@ -86,6 +99,19 @@ function getStepFocusableItems(step) {
 
 /* =========================================================
    INITIALIZE STEP NAVIGATION
+
+   IMPORTANT:
+
+   This function is intentionally safe to call again after
+   injectContent() replaces the lesson DOM.
+
+   New lesson:
+       new .step-float elements
+       new .step-img elements
+       new .step-vid elements
+       new <video> elements
+
+   Therefore those NEW elements need NEW listeners.
    ========================================================= */
 
 export function initStepNavigation({
@@ -95,6 +121,10 @@ export function initStepNavigation({
     if (!mainTargetDiv) return;
 
 
+    /* =====================================================
+       REFRESH STEP CACHE
+       ===================================================== */
+
     steps = [
         ...mainTargetDiv.querySelectorAll(
             ".step-float"
@@ -102,15 +132,10 @@ export function initStepNavigation({
     ];
 
 
-    /*
-     * This ALREADY finds media inside .imgs-container.
-     *
-     * Example:
-     *
-     * .imgs-container
-     *     .step-img
-     *     .step-vid
-     */
+    /* =====================================================
+       REFRESH MEDIA CACHE
+       ===================================================== */
+
     allStepImgVids = [
         ...mainTargetDiv.querySelectorAll(
             ".step-img, .step-vid"
@@ -118,16 +143,20 @@ export function initStepNavigation({
     ];
 
 
+    /*
+     * toggle-img-sizes.js also maintains its own cache.
+     *
+     * This MUST be refreshed after every injected lesson.
+     */
     updateImgs(
         mainTargetDiv
     );
 
 
-    /*
-     * Your Step 02 video matches this exactly:
-     *
-     * .step-vid > video
-     */
+    /* =====================================================
+       REFRESH VIDEO CACHE
+       ===================================================== */
+
     allVids = [
         ...mainTargetDiv.querySelectorAll(
             ".step-vid > video"
@@ -137,32 +166,63 @@ export function initStepNavigation({
 
     /* =====================================================
        CLICK OUTSIDE MEDIA
+
+       document survives lesson injection.
+
+       Attach this listener ONCE.
        ===================================================== */
 
-    document.addEventListener(
-        "pointerdown",
-        e => {
+    if (
+        !documentMediaListenerAdded
+    ) {
 
-            const media =
-                e.target.closest(
-                    ".step-img, .step-vid"
-                );
+        document.addEventListener(
+            "pointerdown",
+            e => {
+
+                const media =
+                    e.target.closest(
+                        ".step-img, .step-vid"
+                    );
 
 
-            if (media) return;
+                if (media) return;
 
 
-            denlargeAllImages();
+                denlargeAllImages();
 
-        }
-    );
+            }
+        );
+
+
+        documentMediaListenerAdded =
+            true;
+
+    }
 
 
     /* =====================================================
        VIDEO EVENTS
+
+       These videos are NEW after each lesson injection,
+       so these listeners MUST be attached again.
        ===================================================== */
 
     allVids.forEach(vid => {
+
+        /*
+         * Prevent accidental duplicate listeners if this
+         * function is called twice on the SAME lesson DOM.
+         */
+        if (
+            vid.dataset.stepVideoListenerAdded ===
+            "true"
+        ) {
+
+            return;
+
+        }
+
 
         const stepVid =
             vid.closest(
@@ -244,14 +304,31 @@ export function initStepNavigation({
 
         });
 
+
+        vid.dataset.stepVideoListenerAdded =
+            "true";
+
     });
 
 
     /* =====================================================
        IMAGE / VIDEO WRAPPER CLICK
+
+       Media wrappers are NEW after lesson injection,
+       therefore these listeners also need to be recreated.
        ===================================================== */
 
     allStepImgVids.forEach(media => {
+
+        if (
+            media.dataset.mediaClickListenerAdded ===
+            "true"
+        ) {
+
+            return;
+
+        }
+
 
         media.addEventListener(
             "click",
@@ -282,11 +359,18 @@ export function initStepNavigation({
             }
         );
 
+
+        media.dataset.mediaClickListenerAdded =
+            "true";
+
     });
 
 
     /* =====================================================
        STEP EVENTS
+
+       .step-float elements are NEW after injection,
+       so every new step receives its listeners.
        ===================================================== */
 
     steps.forEach(
@@ -304,8 +388,13 @@ export function initStepNavigation({
             }
 
 
+            /*
+             * Protect against initialization twice on
+             * the SAME lesson DOM.
+             */
             if (
-                step.dataset.listenerAdded
+                step.dataset.listenerAdded ===
+                "true"
             ) {
 
                 return;
@@ -327,10 +416,6 @@ export function initStepNavigation({
                 "focus",
                 e => {
 
-                    /*
-                     * Focusing the actual step means we're
-                     * navigating steps again.
-                     */
                     stepClicked =
                         false;
 
@@ -347,25 +432,20 @@ export function initStepNavigation({
 
 
                     /*
-                     * IMPORTANT FIX:
+                     * Freshly arriving at a step resets
+                     * the media cycle BEFORE the first item.
                      *
-                     * Every fresh arrival on a step starts
-                     * its media cycle BEFORE item #1.
-                     *
-                     * cycleStepMedia() increments this:
+                     * cycleStepMedia():
                      *
                      * -1 -> 0
                      *
-                     * Therefore first Enter = first media.
+                     * Therefore first Enter enlarges
+                     * the FIRST media item.
                      */
                     step.dataset.mediaIndex =
                         -1;
 
 
-                    /*
-                     * Fresh step navigation should use
-                     * normal focus behavior.
-                     */
                     preserveMediaOnChildFocus =
                         false;
 
@@ -423,9 +503,6 @@ export function initStepNavigation({
                         index;
 
 
-                    /*
-                     * Child inside step received focus.
-                     */
                     if (
                         e.target !== step
                     ) {
@@ -476,10 +553,9 @@ export function initStepNavigation({
                            ENTER-INITIATED CHILD FOCUS
 
                            Enter just enlarged media and
-                           then moved focus to copy-code/link.
+                           moved focus into the step.
 
-                           DON'T immediately undo the
-                           enlargement we just requested.
+                           Keep that newly enlarged media.
                            --------------------------------- */
 
                         if (
@@ -499,8 +575,8 @@ export function initStepNavigation({
                            NORMAL CHILD FOCUS
 
                            Existing behavior preserved:
-                           moving around inside a step
-                           shrinks enlarged media.
+                           moving normally to a child inside
+                           a step removes enlargement.
                            --------------------------------- */
 
                         step.querySelectorAll(
@@ -533,8 +609,7 @@ export function initStepNavigation({
                 e => {
 
                     /*
-                     * Focus stayed somewhere inside
-                     * this same step.
+                     * Focus stayed inside this same step.
                      */
                     if (
                         step.contains(
@@ -580,7 +655,6 @@ export function initStepNavigation({
 
                     /* =====================================
                        LINK SHIFT + ENTER
-                       TOGGLE STEP MEDIA SIZE
                        ===================================== */
 
                     if (
@@ -614,8 +688,8 @@ export function initStepNavigation({
                     ) {
 
                         /*
-                         * Never cycle media from
-                         * video-control buttons.
+                         * Video buttons keep their own
+                         * existing behavior.
                          */
                         if (
                             e.target.closest(
@@ -651,15 +725,6 @@ export function initStepNavigation({
                                 true;
 
 
-                            /*
-                             * Cycle THIS STEP'S:
-                             *
-                             * .step-img
-                             * .step-vid
-                             *
-                             * Items inside .imgs-container
-                             * are automatically included.
-                             */
                             const enlargedMedia =
                                 cycleStepMedia(
                                     stepFloat
@@ -669,8 +734,8 @@ export function initStepNavigation({
                             /* ---------------------------------
                                VIDEO
 
-                               If the media we just enlarged is
-                               .step-vid, start the video.
+                               If cycling lands on a video,
+                               use existing videoControls().
                                --------------------------------- */
 
                             if (
@@ -702,13 +767,6 @@ export function initStepNavigation({
 
                             /* ---------------------------------
                                ENTER STEP CONTENT
-
-                               Keep existing behavior:
-                               focus first copy-code, otherwise
-                               first link.
-
-                               BUT preserve the media that Enter
-                               just enlarged.
                                --------------------------------- */
 
                             const firstCopyCode =
@@ -767,10 +825,6 @@ export function initStepNavigation({
 
                         else {
 
-                            /*
-                             * Existing Shift+Enter behavior
-                             * preserved.
-                             */
                             stepFloat.focus();
 
 
@@ -872,10 +926,6 @@ export function initStepNavigation({
                     );
 
 
-                    /*
-                     * Clicking a CHILD inside a step means
-                     * we've entered the step.
-                     */
                     if (
                         e.target !== step
                     ) {
@@ -898,94 +948,108 @@ export function initStepNavigation({
 
     /* =====================================================
        MAIN CONTENT KEYBOARD
+
+       mainTargetDiv survives lesson injection.
+
+       Therefore this listener must only be attached ONCE.
        ===================================================== */
 
-    mainTargetDiv.addEventListener(
-        "keydown",
-        e => {
+    if (
+        !mainTargetListenerAdded
+    ) {
 
-            const key =
-                e.key.toLowerCase();
+        mainTargetDiv.addEventListener(
+            "keydown",
+            e => {
 
-
-            /* =============================================
-               M
-               RETURN TO CURRENT STEP CONTAINER
-               ============================================= */
-
-            if (
-                key === "m"
-            ) {
-
-                const step =
-                    e.target.closest(
-                        ".step-float"
-                    );
+                const key =
+                    e.key.toLowerCase();
 
 
-                if (step) {
+                /* =========================================
+                   M
+                   RETURN TO CURRENT STEP CONTAINER
+                   ========================================= */
+
+                if (
+                    key === "m"
+                ) {
+
+                    const step =
+                        e.target.closest(
+                            ".step-float"
+                        );
+
+
+                    if (step) {
+
+                        e.preventDefault();
+                        e.stopPropagation();
+
+
+                        stepClicked =
+                            false;
+
+
+                        step.focus();
+
+
+                        return;
+
+                    }
+
+                }
+
+
+                /* =========================================
+                   COPY-CODE ENTER
+                   ========================================= */
+
+                if (
+                    e.target.classList
+                        .contains(
+                            "copy-code"
+                        ) &&
+                    e.key === "Enter"
+                ) {
 
                     e.preventDefault();
                     e.stopPropagation();
-
-
-                    stepClicked =
-                        false;
-
-
-                    step.focus();
 
 
                     return;
 
                 }
 
-            }
+
+                /* =========================================
+                   NUMBER NAV
+                   ========================================= */
+
+                if (
+                    /^[1-9]$/.test(
+                        key
+                    )
+                ) {
+
+                    e.preventDefault();
 
 
-            /* =============================================
-               COPY-CODE ENTER
-               ============================================= */
+                    numStepNav(
+                        Number(key),
+                        e.target
+                    );
 
-            if (
-                e.target.classList
-                    .contains(
-                        "copy-code"
-                    ) &&
-                e.key === "Enter"
-            ) {
-
-                e.preventDefault();
-                e.stopPropagation();
-
-
-                return;
-
-            }
-
-
-            /* =============================================
-               NUMBER NAV
-               ============================================= */
-
-            if (
-                /^[1-9]$/.test(
-                    key
-                )
-            ) {
-
-                e.preventDefault();
-
-
-                numStepNav(
-                    Number(key),
-                    e.target
-                );
+                }
 
             }
+        );
 
-        }
-    );
+
+        mainTargetListenerAdded =
+            true;
+
+    }
 
 }
 
@@ -1009,10 +1073,8 @@ function numStepNav(
 
 
     /*
-     * If we're truly INSIDE a step,
+     * If truly INSIDE a step,
      * numbers target COPY-CODES ONLY.
-     *
-     * The step container itself does not count.
      */
     if (
         currentStep &&
@@ -1048,10 +1110,8 @@ function numStepNav(
 
 
     /*
-     * Outside a step, or focused directly on
-     * a step container:
-     *
-     * numbers select corresponding steps.
+     * Outside a step or directly on the step:
+     * numbers select steps.
      */
     if (
         intLet > 0 &&
@@ -1200,7 +1260,6 @@ export function handleStepNav({
 
         /* ---------------------------------------------
            STEP CONTAINER
-           NAVIGATE THROUGH STEPS
            --------------------------------------------- */
 
         if (!steps.length) return;
@@ -1316,7 +1375,6 @@ export function handleStepNav({
 
         /* ---------------------------------------------
            STEP CONTAINER
-           NAVIGATE THROUGH STEPS
            --------------------------------------------- */
 
         if (!steps.length) return;
