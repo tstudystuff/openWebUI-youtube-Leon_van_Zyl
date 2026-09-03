@@ -10,7 +10,8 @@ import {
 
 import {
     videoControls,
-    pauseAllVideos
+    pauseAllVideos,
+    resetVideoToPoster
 } from "../ui/playStepVid.js";
 
 import { changeTutorialLink } from "../ui/change-tutorial-link.js";
@@ -651,7 +652,57 @@ export function initStepNavigation({
 
 
                     if (!stepFloat) return;
+                    /* =====================================
+                   SHIFT + ENTER
+                   RESET PLAYING VIDEO TO POSTER
+                
+                   IMPORTANT:
+                
+                   This happens BEFORE all other
+                   Shift + Enter behavior.
+                
+                   If a video is actively playing:
+                       - pause
+                       - reset to 0
+                       - restore poster
+                       - stop here
+                
+                   If the video is already paused:
+                       normal Shift + Enter continues.
+                   ===================================== */
 
+                    if (
+                        key === "Enter" &&
+                        e.shiftKey
+                    ) {
+
+                        const playingVid =
+                            [
+                                ...stepFloat.querySelectorAll(
+                                    ".step-vid video"
+                                )
+                            ]
+                                .find(vid => !vid.paused);
+
+
+                        if (
+                            playingVid
+                        ) {
+
+                            e.preventDefault();
+                            e.stopPropagation();
+
+
+                            resetVideoToPoster(
+                                playingVid
+                            );
+
+
+                            return;
+
+                        }
+
+                    }
 
                     /* =====================================
                        LINK SHIFT + ENTER

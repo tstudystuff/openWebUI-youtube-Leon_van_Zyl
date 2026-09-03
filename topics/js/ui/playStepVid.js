@@ -1,5 +1,4 @@
 // js/ui/playStepVid.js
-
 let playing = false;
 
 const ACTIVE_CLASS = "control-active";
@@ -324,7 +323,6 @@ function playVideo(vid) {
 
 }
 
-
 /* =========================================================
    PAUSE
    ========================================================= */
@@ -354,10 +352,76 @@ function pauseVideo(vid) {
 
 
 /* =========================================================
+   RESET VIDEO TO POSTER
+
+   Used when Shift + Enter is pressed while
+   a video is actively playing.
+
+   Keeps enlargement state unchanged.
+   ========================================================= */
+
+export function resetVideoToPoster(vid) {
+
+    if (!vid) return;
+
+
+    playing =
+        false;
+
+
+    /*
+     * Stop playback.
+     */
+    vid.pause();
+
+
+    /*
+     * Return to beginning.
+     */
+    try {
+
+        vid.currentTime =
+            0;
+
+    } catch {
+
+        // Metadata may not be ready yet.
+
+    }
+
+
+    /*
+     * Reload the media element so the poster
+     * becomes visible again.
+     */
+    vid.load();
+
+
+    /*
+     * Preserve current enlarged sizing.
+     */
+    syncVideoSize(
+        vid
+    );
+
+
+    /*
+     * Restore play-button appearance.
+     */
+    updatePlayButton(
+        vid
+    );
+
+}
+
+
+
+/* =========================================================
    TOGGLE PLAY / PAUSE
    ========================================================= */
 
 function togglePlayPause(vid) {
+
 
     if (!vid) return;
 
