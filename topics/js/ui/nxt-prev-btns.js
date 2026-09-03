@@ -37,15 +37,61 @@ export function navigateLesson(direction) {
     ];
 
 
+    if (!allLinks.length) return;
+
+
     const currentIndex =
         allLinks.indexOf(lastClickedSideBarLink);
 
 
-    if (currentIndex === -1) return;
+    let targetIndex;
 
 
-    const targetIndex =
-        currentIndex + direction;
+    /*
+     * NO LESSON SELECTED YET
+     *
+     * Example: homepage.html is currently showing.
+     *
+     * Next     -> first sidebar lesson
+     * Previous -> last sidebar lesson
+     */
+    if (currentIndex === -1) {
+
+        targetIndex =
+            direction === 1
+                ? 0
+                : allLinks.length - 1;
+
+    } else {
+
+        /*
+         * NORMAL LESSON NAVIGATION
+         */
+        targetIndex =
+            currentIndex + direction;
+
+
+        /*
+         * NEXT from last lesson -> first lesson
+         */
+        if (targetIndex >= allLinks.length) {
+
+            targetIndex = 0;
+
+        }
+
+
+        /*
+         * PREVIOUS from first lesson -> last lesson
+         */
+        if (targetIndex < 0) {
+
+            targetIndex =
+                allLinks.length - 1;
+
+        }
+
+    }
 
 
     const targetLink =
@@ -55,22 +101,12 @@ export function navigateLesson(direction) {
     if (!targetLink) return;
 
 
-    // Reopen sidebar
-    mainContainer.classList.remove("collapsed");
+    // Existing behavior
+    mainContainer.classList.remove(
+        "collapsed"
+    );
 
 
-    /*
-     * IMPORTANT:
-     *
-     * Click the target lesson ONCE.
-     *
-     * The sidebar link's existing click behavior
-     * already handles loading / injecting the lesson.
-     *
-     * Clicking it twice can cause the newly initialized
-     * lesson DOM to immediately be replaced by a second
-     * injection, leaving the final media without its
-     * event listeners.
-     */
+    // Use existing sidebar click behavior
     targetLink.click();
 }
