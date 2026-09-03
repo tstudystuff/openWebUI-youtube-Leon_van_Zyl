@@ -3,6 +3,7 @@
 
 /* nav */
 @import url('dark-mode.css');
+@import url('dark-mode-colors.css');
 
 /* uis */
 @import url('ui/toggle-side-bar.css');

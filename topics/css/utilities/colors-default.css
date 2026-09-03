@@ -1,7 +1,16 @@
 .rb {
-    color: royalblue !important;
+    color: royalblue;
 }
 
 .bo {
-    color: orangered !important;
+    color: orangered;
+}
+
+.lg {
+    color: rgb(0, 255, 34);
+}
+
+.rg {
+    color: goldenrod;
+    ;
 }

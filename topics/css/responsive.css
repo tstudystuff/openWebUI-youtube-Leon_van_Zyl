@@ -34,47 +34,80 @@
 }
 
 @media screen and (max-width: 700px) {
-    .step-vid.enlarge {}
 
-    .step-img.enlarge {
+    /* =====================================================
+       ENLARGED MEDIA
+       ===================================================== */
 
-        /* max-width: 90vw; */
-        max-width: 500px;
-        max-height: 300px;
-        transform: scale(2) !important;
-        transform: translate(-50%, -50%) scale(2) !important;
+    .step-img.enlarge,
+    .step-vid.enlarge {
+        width: 90vw !important;
+        max-width: 90vw !important;
+        max-height: 80vh !important;
+
+        transform: translate(-50%, -50%) scale(1) !important;
     }
+
+
+    .step-img.enlarge>img,
+    .step-vid.enlarge>video {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        height: auto !important;
+        max-height: 75vh !important;
+
+        object-fit: contain;
+        display: block;
+    }
+
+
+    /* =====================================================
+       NORMAL SMALL MEDIA
+       ===================================================== */
+
+    .step-vid:not(.enlarge)>video,
+    .step-img:not(.enlarge)>img {
+        max-height: 250px;
+        max-width: 300px;
+    }
+
+
+    /* =====================================================
+       SIDEBAR
+       ===================================================== */
 
     .side-bar-links-container>ul {
         margin: 0;
         margin-left: 15% !important;
-        /* border: 2px solid orange; */
     }
+
 
     .side-bar-links-container>ul>li>ul {
         margin-left: 8% !important;
-
     }
+
 
     .side-bar ul li a {
         font-size: .86rem;
     }
 
-    .step-content p {
-        font-size: 75%;
-    }
-
-    .step-vid>video,
-    .step-img>img {
-        max-height: 250px;
-        max-width: 300px;
-    }
 
     .side-bar-links>li {
         margin-bottom: 20%;
     }
 
+
     .side-bar-links {
         margin-top: 50% !important;
+    }
+
+
+    /* =====================================================
+       STEP CONTENT
+       ===================================================== */
+
+    .step-content p {
+        font-size: 75%;
     }
 }
