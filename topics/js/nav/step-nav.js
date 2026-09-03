@@ -236,8 +236,19 @@ export function initStepNavigation({ mainTargetDiv }) {
            STEP FOCUS IN
            ------------------------------------------------- */
 
-        step.addEventListener("focusin", () => {
+        step.addEventListener("focusin", e => {
             iSteps = index;
+
+            // If focus moves to ANY child inside this step,
+            // remove enlarged image/video state.
+            if (e.target !== step) {
+                step.querySelectorAll(
+                    ".step-img.enlarge, .step-vid.enlarge"
+                ).forEach(media => {
+                    media.classList.remove("enlarge");
+                    media.classList.remove("first-vid-enlarge");
+                });
+            }
         });
 
 
