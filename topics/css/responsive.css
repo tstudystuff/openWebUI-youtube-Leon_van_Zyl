@@ -1,7 +1,8 @@
 @media screen and (max-width: 1500px) {
-    .side-bar-links-container li > a {
+    .side-bar-links-container li>a {
         font-size: 125%;
     }
+
     .side-bar-links-container>ul>li {
         font-size: 76% !important;
         /* color: purple; */
@@ -11,55 +12,68 @@
         font-size: 60% !important;
         /* color: purple; */
     }
-    .step-float > .step-vid,
-    .step-float > .step-img{
-        max-width:  500px  !important;
+
+    .step-float>.step-vid,
+    .step-float>.step-img {
+        max-width: 500px !important;
     }
 }
 
 @media screen and (min-width: 750px) {
-    .step-float > .step-vid,
-    .step-float > .step-img{
-        min-height: 350px  ;
-        min-width:  500px  ;
-        max-width:  400px  ;
+
+    .step-float>.step-vid,
+    .step-float>.step-img {
+        min-height: 350px;
+        min-width: 500px;
+        max-width: 400px;
+    }
+
+    .side-bar {
+        min-width: 20vw
     }
 }
+
 @media screen and (max-width: 700px) {
-    .step-vid.enlarge {
-    }
-    .step-img.enlarge{
+    .step-vid.enlarge {}
+
+    .step-img.enlarge {
 
         /* max-width: 90vw; */
-        max-width:  500px ;
-        max-height: 300px ;
+        max-width: 500px;
+        max-height: 300px;
         transform: scale(2) !important;
         transform: translate(-50%, -50%) scale(2) !important;
     }
-    .side-bar-links-container > ul{
+
+    .side-bar-links-container>ul {
         margin: 0;
         margin-left: 15% !important;
         /* border: 2px solid orange; */
     }
-    .side-bar-links-container> ul >li >ul{
+
+    .side-bar-links-container>ul>li>ul {
         margin-left: 8% !important;
-        
+
     }
-    
-    .side-bar ul li a{
+
+    .side-bar ul li a {
         font-size: .86rem;
     }
+
     .step-content p {
-        font-size: 75%;   
+        font-size: 75%;
     }
+
     .step-vid>video,
     .step-img>img {
         max-height: 250px;
-        max-width: 300px ;
+        max-width: 300px;
     }
+
     .side-bar-links>li {
         margin-bottom: 20%;
     }
+
     .side-bar-links {
         margin-top: 50% !important;
     }
