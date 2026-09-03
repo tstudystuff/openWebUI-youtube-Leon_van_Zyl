@@ -1,15 +1,37 @@
+/* Blues */
+.tb {
+    /* Turquoise Blue */
+    color: rgb(0, 208, 255);
+}
+
 .rb {
     color: royalblue;
 }
 
-.bo {
-    color: orangered;
-}
-
+/* Greens */
 .lg {
     color: rgb(0, 255, 34);
 }
 
 .mg {
     color: rgb(128, 189, 74);
+}
+
+.mg {
+    color: rgb(128, 189, 74);
+}
+
+/* Oranges */
+.bo {
+    color: orangered;
+}
+
+/* Magentas / Pinks Magentas */
+.m {
+    color: magenta;
+}
+
+/* Reds*/
+.t {
+    color: tomato;
 }
