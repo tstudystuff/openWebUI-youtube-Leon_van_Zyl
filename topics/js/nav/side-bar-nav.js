@@ -188,19 +188,34 @@ export function sideBarNav({ e, focusZone }) {
     }
 
     /* ---- FORWARD / BACK ---- */
+    /* ---- FORWARD / BACK ---- */
     if (key === 'f' || key === 'a') {
+        e.preventDefault();
         suppressIndexUpdate = true;
 
         let current = visibleLinks.indexOf(activeEl);
-        if (current === -1) current = 0;
+
+        // If focus somehow isn't on a visible sidebar link:
+        // F starts from before the first link.
+        // A starts from after the last link.
+        if (current === -1) {
+            current = key === 'f'
+                ? -1
+                : visibleLinks.length;
+        }
 
         const delta = key === 'f'
             ? (e.shiftKey ? -1 : 1)
             : -1;
 
-        const next = (current + delta + visibleLinks.length) % visibleLinks.length;
+        const next =
+            (current + delta + visibleLinks.length) %
+            visibleLinks.length;
+
         visibleLinks[next].focus();
-        iSideBarLinks = allSideBarLinks.indexOf(visibleLinks[next]);
+
+        iSideBarLinks =
+            allSideBarLinks.indexOf(visibleLinks[next]);
 
         suppressIndexUpdate = false;
         return;
