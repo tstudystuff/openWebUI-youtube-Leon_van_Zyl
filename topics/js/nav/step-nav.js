@@ -653,111 +653,179 @@ export function initStepNavigation({
 
                     if (!stepFloat) return;
                     /* =====================================
-                   SHIFT + ENTER
-                   RESET PLAYING VIDEO TO POSTER
-                
-                   IMPORTANT:
-                
-                   This happens BEFORE all other
-                   Shift + Enter behavior.
-                
-                   If a video is actively playing:
-                       - pause
-                       - reset to 0
-                       - restore poster
-                       - stop here
-                
-                   If the video is already paused:
-                       normal Shift + Enter continues.
-                   ===================================== */
+   SHIFT + ENTER
+   CYCLE STEP MEDIA
 
-                    if (
-                        key === "Enter" &&
-                        e.shiftKey
-                    ) {
+   Works from:
+       - .step-float
+       - links
+       - copy-code
+       - other children inside step
 
-                        const playingVid =
-                            [
-                                ...stepFloat.querySelectorAll(
-                                    ".step-vid video"
-                                )
-                            ]
-                                .find(vid => !vid.paused);
+   Each press:
+       1. stop/reset currently playing video
+       2. de-enlarge current media via cycleStepMedia()
+       3. advance to next image/video
+       4. enlarge it
+       5. play it if it is a video
+
+   IMPORTANT:
+   Do NOT focus stepFloat here because the step focus
+   handler resets data-media-index to -1.
+   ===================================== */
+
+if (
+    key === "Enter" &&
+    e.shiftKey
+) {
+
+    e.preventDefault();
+    e.stopPropagation();
 
 
-                        if (
-                            playingVid
-                        ) {
+    /*
+     * Stop/reset the video we're leaving,
+     * but DO NOT return.
+     *
+     * We still want to advance to the next media.
+     */
+    const playingVid =
+        [
+            ...stepFloat.querySelectorAll(
+                ".step-vid video"
+            )
+        ]
+            .find(vid => !vid.paused);
 
-                            e.preventDefault();
-                            e.stopPropagation();
+
+    if (
+        playingVid
+    ) {
+
+        resetVideoToPoster(
+            playingVid
+        );
+
+    }
 
 
-                            resetVideoToPoster(
-                                playingVid
-                            );
+    /*
+     * Advance:
+     *
+     * img 1 -> video 2 -> img 3 -> video 4 -> ...
+     *
+     * cycleStepMedia handles removing enlargement
+     * from the previous media and enlarging the next.
+     */
+    const enlargedMedia =
+        cycleStepMedia(
+            stepFloat
+        );
 
 
-                            return;
+    /*
+     * If the NEW media is a video,
+     * start it using the existing video system.
+     */
+    if (
+        enlargedMedia
+            ?.classList
+            .contains(
+                "step-vid"
+            )
+    ) {
 
-                        }
+        const vid =
+            enlargedMedia
+                .querySelector(
+                    "video"
+                );
 
-                    }
+
+        if (vid) {
+
+            try {
+
+                vid.currentTime =
+                    0;
+
+            } catch {
+
+                // Metadata may not be loaded yet.
+
+            }
+
+
+            videoControls({
+                vid,
+                e
+            });
+
+        }
+
+    }
+
+
+    lastStep =
+        stepFloat;
+
+
+    return;
+
+}
 
                     /* =====================================
-                       LINK SHIFT + ENTER
-                       ===================================== */
-
-                    if (
-                        key === "Enter" &&
-                        e.shiftKey &&
-                        e.target.closest(
-                            "a[href]"
-                        )
-                    ) {
-
-                        e.preventDefault();
-                        e.stopPropagation();
-
-
-                        toggleStepMedia(
-                            stepFloat
-                        );
-
-
-                        return;
-
-                    }
-
-
-                    /* =====================================
-                       ENTER / SHIFT + ENTER
-                       ===================================== */
+                    ENTER / SHIFT + ENTER
+                    ===================================== */
 
                     if (
                         key === "Enter"
                     ) {
 
-                        /*
-                         * Video buttons keep their own
-                         * existing behavior.
-                         */
-                        if (
-                            e.target.closest(
-                                ".vid-cntrl-btns"
-                            )
-                        ) {
+    /*
+     * Video buttons keep their own
+     * existing behavior.
+     */
+    if (
+        e.target.closest(
+            ".vid-cntrl-btns"
+        )
+    ) {
 
-                            return;
+        return;
 
-                        }
-
-
-                        changeTutorialLink(
-                            e
-                        );
+    }
 
 
+    /*
+     * NORMAL ENTER ON LINKS
+     *
+     * Let the browser handle the anchor normally.
+     *
+     * This preserves:
+     *     - Enter opens href
+     *     - target="_blank" works
+     *     - mouse click works normally
+     *
+     * Shift + Enter is intentionally NOT included
+     * because that is handled above by the custom
+     * media-toggle behavior.
+     */
+    if (
+        !e.shiftKey &&
+        e.target.closest(
+            "a[href]"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    changeTutorialLink(
+        e
+    );
                         /* ---------------------------------
                            NORMAL ENTER
                            --------------------------------- */
