@@ -766,6 +766,38 @@ export function initStepNavigation({
                             !e.shiftKey
                         ) {
 
+                            const firstFocusable =
+                                getStepFocusableItems(
+                                    stepFloat
+                                )[0];
+
+
+                            if (
+                                e.target === stepFloat &&
+                                firstFocusable?.matches(
+                                    "a[href]"
+                                )
+                            ) {
+
+                                e.preventDefault();
+
+
+                                stepClicked =
+                                    true;
+
+
+                                firstFocusable
+                                    .focus();
+
+
+                                lastStep =
+                                    stepFloat;
+
+
+                                return;
+
+                            }
+
                             updateCurrentCopyCodes({
                                 step:
                                     stepFloat
@@ -975,6 +1007,43 @@ export function initStepNavigation({
                     changeTutorialLink(
                         e
                     );
+
+
+                    const clickedInteractiveElement =
+                        e.target.closest(
+                            "a[href], button, input, select, textarea, " +
+                            "[contenteditable='true'], .copy-code, .step-img, .step-vid"
+                        );
+
+
+                    const firstFocusable =
+                        getStepFocusableItems(
+                            step
+                        )[0];
+
+
+                    if (
+                        !clickedInteractiveElement &&
+                        firstFocusable?.matches(
+                            "a[href]"
+                        )
+                    ) {
+
+                        stepClicked =
+                            true;
+
+
+                        firstFocusable
+                            .focus();
+
+
+                        lastStep =
+                            step;
+
+
+                        return;
+
+                    }
 
 
                     if (
