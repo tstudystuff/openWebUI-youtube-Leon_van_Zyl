@@ -1,7 +1,7 @@
 // js/ui/toggle-img-sizes.js
 
+import { updatePlayButton } from "./playStepVid.js";
 let allMedia = [];
-
 
 /* =========================================================
    VIDEO SIZE SYNC
@@ -46,7 +46,122 @@ function syncVideoSize(media) {
 
     }
 }
+/* =========================================================
+   ESCAPE — CLOSE ENLARGED MEDIA
 
+   When Escape is pressed:
+
+       - enlarged image returns to normal size
+       - enlarged video returns to normal size
+       - enlarged video pauses
+       - video stays at its current timestamp
+       - poster/reset behavior is NOT triggered
+   ========================================================= */
+
+function handleEscapeMedia(e) {
+
+    if (e.key !== "Escape") {
+        return;
+    }
+
+
+    const enlargedMedia = [
+        ...document.querySelectorAll(
+            ".step-img.enlarge, " +
+            ".step-img.first-vid-enlarge, " +
+            ".step-vid.enlarge, " +
+            ".step-vid.first-vid-enlarge"
+        )
+    ];
+
+
+    /*
+     * Nothing enlarged — Escape keeps its
+     * normal browser/page behavior.
+     */
+    if (!enlargedMedia.length) {
+        return;
+    }
+
+
+    e.preventDefault();
+
+
+    enlargedMedia.forEach(media => {
+
+        /*
+         * If the enlarged media is a video,
+         * pause it before shrinking.
+         *
+         * IMPORTANT:
+         * We intentionally DO NOT call
+         * resetVideoToPoster().
+         *
+         * Escape should pause at the current
+         * timestamp, not rewind to zero.
+         */
+        if (
+            media.classList.contains(
+                "step-vid"
+            )
+        ) {
+
+            const video =
+                media.querySelector(
+                    "video"
+                );
+
+
+            if (video) {
+
+                video.pause();
+
+
+                updatePlayButton(
+                    video
+                );
+
+            }
+
+        }
+
+
+        removeMediaEnlarge(
+            media
+        );
+
+
+        /*
+         * Reset the remembered media position
+         * for this step.
+         */
+        const step =
+            media.closest(
+                ".step-float"
+            );
+
+
+        if (step) {
+
+            step.dataset.mediaIndex =
+                -1;
+
+        }
+
+    });
+
+}
+
+
+/*
+ * This module loads once, so the listener works
+ * for both the original page and dynamically
+ * injected lesson content.
+ */
+document.addEventListener(
+    "keydown",
+    handleEscapeMedia
+);
 
 /* =========================================================
    REMOVE ENLARGE FROM ONE MEDIA ITEM
